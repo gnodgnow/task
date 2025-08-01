@@ -148,6 +148,8 @@ const statsStart=document.getElementById('stats-start-date'),statsEnd=document.g
 // auth
 async function sessionChange(){let{data:{session}}=await supabase.auth.getSession(); if(session) showApp(); else showLogin();}
 supabase.auth.onAuthStateChange(sessionChange);
+// 页面加载时主动检查会话状态
+sessionChange();
 async function showLogin(){loginEl.classList.remove('hidden');appEl.classList.add('hidden');}
 async function showApp(){loginEl.classList.add('hidden');appEl.classList.remove('hidden'); await initialize();}
 // events
@@ -155,7 +157,8 @@ document.getElementById('btn-signup').onclick=async()=>{let e=document.getElemen
 document.getElementById('btn-login').onclick=async()=>{let e=document.getElementById('email').value,p=document.getElementById('password').value;let{error}=await supabase.auth.signInWithPassword({email:e,password:p});msgEl.textContent=error?error.message:'';};
 document.getElementById('btn-github').onclick=()=>supabase.auth.signInWithOAuth({provider:'github'});
 document.getElementById('btn-logout').onclick=async()=>{await supabase.auth.signOut();};
-// init\async function initialize(){await loadData();setupListeners();render();}
+// init
+async function initialize(){await loadData();setupListeners();render();}
 async function loadData(){let{data:{user}}=await supabase.auth.getUser(); let{data:t}=await supabase.from('tasks').select('*').eq('user_id',user.id); tasks=t||[]; let{data:wp}=await supabase.from('weekly_progress').select('*').eq('user_id',user.id); weeklyProgress=wp.reduce((a,r)=>{a[r.week_id]=r;return a;},{});}
 function setupListeners(){document.getElementById('add-task-form').addEventListener('submit',addTask);searchBox.addEventListener('input',e=>{currentFilter=e.target.value;renderTaskList();});document.getElementById('sort-urgency').onclick=()=>{setSort('urgency')};document.getElementById('sort-status').onclick=()=>{setSort('status')};document.getElementById('clear-filter').onclick=()=>{searchBox.value=currentFilter='';currentSort={key:'created_at',reverse:false};renderTaskList();};statsStart.onchange=render;statsEnd.onchange=render;document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=e=>switchTab(e.target.dataset.tab));taskListBody.onclick=e=>handleRow(e);document.getElementById('generate-report-btn').onclick=generateWeeklyReport;document.getElementById('save-report-btn').onclick=saveWeeklyReport;document.getElementById('backup-data').onclick=backupData;setupBatch();setupEdit();}
 function render(){renderTaskList();updateStats();updateUrgent();populateWeeks();loadWeek();}
