@@ -105,48 +105,59 @@
         </div>
         <div id="tab-tasks" class="tab-content">
           <!-- 任务管理逻辑与 TaskMaster-v1.0.html 完全一致，此处省略，直接引入原脚本 -->
-          <!-- 你可以将 TaskMaster-v1.0.html 的 <script> 部分复制到这里，并替换 localStorage 部分为 Supabase CRUD -->
-        </div>
-        <div id="tab-progress" class="tab-content hidden">
-          <!-- 周报逻辑同原始版本，复制原脚本 -->
-        </div>
-      </main>
-    </div>
-  </div>
+          <!-- 你可以将 TaskMaster-v1.0.html 的 <script>
+window.addEventListener('DOMContentLoaded', () => {
+  // 初始化 Supabase 客户端
+  const { createClient } = supabase;
+  const supabaseClient = createClient(
+    'https://oprqecajnzvzusjqqolk.supabase.co',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wcnFlY2Fqbnp2enVzanFxb2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMTQzMzMsImV4cCI6MjA2OTU5MDMzM30.lY691Yw7u6ipUxXW6inYAnkv-ohJT96OWTAU-usMJOw'
+  );
 
-  <script>
-    // 根据用户反馈，先独立登录页面，按钮响应与样式对齐
-    const supabase = supabase.createClient(
-      'https://oprqecajnzvzusjqqolk.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wcnFlY2Fqbnp2enVzanFxb2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMTQzMzMsImV4cCI6MjA2OTU5MDMzM30.lY691Yw7u6ipUxXW6inYAnkv-ohJT96OWTAU-usMJOw'
-    );
-    // 登录/注册事件
-    document.getElementById('btn-login').onclick = async () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) document.getElementById('login-msg').textContent = error.message;
-      else location.reload();
-    };
-    document.getElementById('btn-signup').onclick = async () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const { error } = await supabase.auth.signUp({ email, password });
-      document.getElementById('login-msg').textContent = error ? error.message : '注册成功，请验证邮箱';
-    };
-    document.getElementById('btn-github').onclick = () => supabase.auth.signInWithOAuth({ provider: 'github' });
+  // 登录/注册按钮
+  const btnLogin = document.getElementById('btn-login');
+  const btnSignup = document.getElementById('btn-signup');
+  const btnGithub = document.getElementById('btn-github');
+  const loginMsg = document.getElementById('login-msg');
 
-    // 会话检查
-    async function checkSession() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        document.getElementById('login-page').style.display = 'none';
-        document.getElementById('app').classList.remove('hidden');
-        // 初始化 TaskMaster-v1.0 功能脚本
-      }
+  btnLogin.addEventListener('click', async () => {
+    loginMsg.textContent = '';
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) loginMsg.textContent = error.message;
+    else location.reload();
+  });
+
+  btnSignup.addEventListener('click', async () => {
+    loginMsg.textContent = '';
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    const { error } = await supabaseClient.auth.signUp({ email, password });
+    loginMsg.textContent = error ? error.message : '注册成功，请检查邮箱并验证';
+  });
+
+  btnGithub.addEventListener('click', () => {
+    supabaseClient.auth.signInWithOAuth({ provider: 'github' });
+  });
+
+  // 会话检查
+  async function checkSession() {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session) {
+      document.getElementById('login-page').style.display = 'none';
+      document.getElementById('app').classList.remove('hidden');
+      // TODO: 在此初始化 TaskMaster 功能
     }
-    supabase.auth.onAuthStateChange(() => checkSession());
+  }
+
+  supabaseClient.auth.onAuthStateChange(() => {
     checkSession();
-  </script>
+  });
+
+  // 首次执行
+  checkSession();
+});
+</script>
 </body>
 </html>
