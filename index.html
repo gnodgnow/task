@@ -1,163 +1,630 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Supabase 任务管理</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-  <style>
-    /* 使用原 TaskMaster 主题 */
-    :root {
-      --color-primary: #00999F;
-      --color-primary-dark: #007f85;
-      --color-accent: #FEEE30;
-      --color-secondary-blue: #81D2E3;
-      --color-bg-mint: #BCEDD8;
-      --color-text-strong: #065758;
-      --color-background: #f8f9fa;
-      --color-surface: #ffffff;
-      --color-border: #e9ecef;
-      --color-success: #28a745;
-      --color-danger: #e74c3c;
-      --shadow-soft: 0 4px 15px rgba(6, 87, 88, 0.1);
-      --border-radius: 8px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: var(--color-background); color: var(--color-text-strong); height: 100vh; overflow: hidden; }
-    /* 登录页样式 */
-    #login-page { display: flex; justify-content: center; align-items: center; height: 100%; background-color: var(--color-background); }
-    #login-card { background: var(--color-surface); padding: 2rem; border-radius: var(--border-radius); box-shadow: var(--shadow-soft); width: 360px; }
-    #login-card h2 { margin-bottom: 1rem; text-align: center; }
-    #login-card input { width: 100%; margin-bottom: 1rem; padding: 0.6rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); }
-    #login-card button { width: 100%; margin-bottom: 0.5rem; padding: 0.6rem; border: none; border-radius: var(--border-radius); background-color: var(--color-primary); color: white; cursor: pointer; }
-    #login-card button:hover { background-color: var(--color-primary-dark); }
-    #login-msg { color: var(--color-danger); text-align: center; margin-top: 0.5rem; }
-    /* 主应用布局 */
-    .app-container { display: flex; height: 100%; }
-    aside.sidebar { flex: 0 0 22rem; background: var(--color-surface); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem; box-shadow: var(--shadow-soft); overflow-y: auto; }
-    .sidebar-section { background: var(--color-background); border-radius: var(--border-radius); padding: 1rem; }
-    .sidebar-section h3 { font-size: 0.9rem; margin-bottom: 0.8rem; }
-    main.main-content { flex: 1; display: flex; flex-direction: column; background: var(--color-surface); border-radius: var(--border-radius); box-shadow: var(--shadow-soft); overflow: hidden; }
-    .tabs { display: flex; border-bottom: 1px solid var(--color-border); }
-    .tab-button { flex: 1; padding: 0.8rem; background: transparent; border: none; font-weight: 500; cursor: pointer; }
-    .tab-button.active { color: var(--color-primary); border-bottom: 3px solid var(--color-primary); }
-    .tab-content { flex: 1; overflow-y: auto; padding: 1.5rem; }
-    /* 任务列表 */
-    #add-task-form { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr auto; gap: 1rem; margin-bottom: 1rem; }
-    #add-task-form input, #add-task-form select { padding: 0.6rem; border: 1px solid var(--color-border); border-radius: var(--border-radius); }
-    #task-table { width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
-    #task-table thead th { padding: 0.6rem 1rem; text-align: left; font-size: 0.8rem; border-bottom: 1px solid var(--color-border); }
-    #task-table tbody td { padding: 0.8rem 1rem; background: var(--color-surface); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
-    /* 公共按钮 */
-    .btn { background: var(--color-border); color: var(--color-text-strong); padding: 0.6rem 1rem; border: none; border-radius: var(--border-radius); cursor: pointer; }
-    .btn-primary { background: var(--color-primary); color: white; }
-    .btn-primary:hover { background: var(--color-primary-dark); }
-    /* 其他样式省略，保持与你 TaskMaster-v1.0.html 一致 */
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster v1.0 - Supabase Edition</title>
+    <style>
+        /* [没有修改] 您的所有 CSS 样式保持不变 */
+        :root {
+            --color-primary: #00999F; --color-primary-dark: #007f85; --color-accent: #FEEE30; --color-secondary-blue: #81D2E3; --color-bg-mint: #BCEDD8; --color-text-strong: #065758; --color-background: #f8f9fa; --color-surface: #ffffff; --color-border: #e9ecef; --color-text-primary: var(--color-text-strong); --color-text-secondary: #6c757d; --color-success: #28a745; --color-danger: #e74c3c; --shadow-soft: 0 4px 15px rgba(6, 87, 88, 0.1); --border-radius: 8px;
+        }
+        html { font-size: 15px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", "Arial", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background-color: var(--color-background); color: var(--color-text-primary); line-height: 1.6; overflow: hidden; height: 100vh; }
+        .app-container { display: flex; height: 100%; padding: 1.2rem; gap: 1.2rem; }
+        .sidebar { flex: 0 0 22rem; min-width: 280px; max-width: 350px; background-color: var(--color-surface); border-radius: var(--border-radius); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.2rem; box-shadow: var(--shadow-soft); overflow-y: auto; }
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; background-color: var(--color-surface); border-radius: var(--border-radius); overflow: hidden; box-shadow: var(--shadow-soft); min-width: 0; }
+        .sidebar-section { background-color: var(--color-background); border-radius: 10px; padding: 1rem; flex-shrink: 0; }
+        .sidebar-section h3 { font-size: 0.9rem; margin-bottom: 0.8rem; font-weight: 600; color: var(--color-text-primary); }
+        button { padding: 0.6rem 1rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: background-color 0.2s, opacity 0.2s; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; opacity: 0.7; }
+        .btn { background-color: #e9ecef; color: var(--color-text-primary); }
+        .btn:hover:not(:disabled) { background-color: #dee2e6; }
+        .btn-primary { background-color: var(--color-primary); color: white; }
+        .btn-primary:hover:not(:disabled) { background-color: var(--color-primary-dark); }
+        .tabs { display: flex; border-bottom: 1px solid var(--color-border); padding: 0.5rem 1.5rem 0 1.5rem; flex-shrink: 0; }
+        .tab-button { background-color: transparent; font-weight: 500; border-bottom: 3px solid transparent; color: var(--color-text-secondary); }
+        .tab-button.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+        .tab-content { padding: 1.5rem; overflow-y: auto; flex-grow: 1; }
+        .tab-pane { display: none; } .tab-pane.active { display: block; }
+        input, select, textarea { width: 100%; padding: 0.6rem 0.8rem; border: 1px solid var(--color-border); border-radius: 8px; background-color: #fff; font-size: 0.9rem; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(0, 153, 159, 0.2); }
+        #add-task-form { display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr auto auto; gap: 1rem; align-items: end; margin-bottom: 1.2rem; }
+        .task-list-container { height: calc(100% - 90px); overflow-y: auto; }
+        #task-table { width: 100%; border-collapse: separate; border-spacing: 0 0.5rem; }
+        #task-table thead th { text-align: left; padding: 0.6rem 1rem; color: var(--color-text-secondary); font-weight: 500; font-size: 0.8rem; border-bottom: 1px solid var(--color-border); }
+        #task-table tbody tr { border-radius: var(--border-radius); transition: box-shadow 0.2s; }
+        #task-table tbody tr:hover { box-shadow: 0 2px 8px rgba(6, 87, 88, 0.1); }
+        #task-table tbody td { padding: 0.8rem 1rem; background-color: var(--color-surface); border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+        #task-table tbody td:first-child { border-left: 1px solid var(--color-border); border-top-left-radius: var(--border-radius); border-bottom-left-radius: var(--border-radius); }
+        #task-table tbody td:last-child { border-right: 1px solid var(--color-border); border-top-right-radius: var(--border-radius); border-bottom-right-radius: var(--border-radius); }
+        .task-name { font-weight: 500; }
+        .badge { padding: 3px 10px; border-radius: 16px; font-size: 0.75rem; font-weight: 500; display: inline-block; }
+        .urgency-badge.urgency-4 { background-color: var(--color-accent); color: var(--color-text-strong); }
+        .urgency-badge.urgency-3 { background-color: rgba(0, 153, 159, 0.15); color: var(--color-primary-dark); }
+        .urgency-badge.urgency-2 { background-color: rgba(129, 210, 227, 0.25); color: #0f6270; }
+        .urgency-badge.urgency-1 { background-color: var(--color-border); color: var(--color-text-secondary); }
+        .status-badge.已完成 { background-color: #e6f5f5; color: #006970; }
+        .status-badge.进行中 { background-color: var(--color-primary); color: white; }
+        .status-badge.已暂停 { background-color: var(--color-border); color: var(--color-text-secondary); }
+        .status-badge.待办 { background-color: #f1f3f5; color: #495057; }
+        .inline-edit { -webkit-appearance: none; appearance: none; border: none; background-color: transparent; font: inherit; }
+        .stat-date-range { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; }
+        #stats-display { display: flex; justify-content: space-around; text-align: center; margin-top: 1rem; }
+        .stat-number { font-size: 1.8rem; font-weight: 700; color: var(--color-primary); }
+        .urgent-tasks-section { min-height: 150px; display: flex; flex-direction: column; }
+        #urgent-tasks-list { list-style-type: none; padding: 0; }
+        #urgent-tasks-list li { padding: 0.4rem 0.2rem; font-size: 0.85rem; border-bottom: 1px solid var(--color-border); }
+        #urgent-tasks-list li:last-child { border-bottom: none; }
+        #urgent-tasks-list li.urgency-4 { font-weight: 600; color: var(--color-primary-dark); }
+        #urgent-tasks-list li.urgency-3 { color: var(--color-text-strong); }
+        #urgent-tasks-list li.urgency-2 { color: var(--color-text-primary); }
+        #urgent-tasks-list li small { display: block; color: var(--color-text-secondary); font-size: 0.75rem; margin-top: 2px; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background-color: var(--color-surface); padding: 2rem; border-radius: var(--border-radius); box-shadow: 0 6px 20px rgba(44, 62, 80, 0.1); width: 90%; max-width: 800px; max-height: 90vh; display: flex; flex-direction: column; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-body { overflow-y: auto; padding-right: 1rem; }
+        .modal-footer { margin-top: 1.5rem; text-align: right; }
+        #edit-daily-progress-container { max-height: 200px; overflow-y: auto; background: var(--color-background); padding: 10px; border-radius: 8px; }
+    </style>
 </head>
 <body>
-  <!-- 登录页 -->
-  <div id="login-page">
-    <div id="login-card">
-      <h2>任务管理系统</h2>
-      <input id="email" type="email" placeholder="邮箱" />
-      <input id="password" type="password" placeholder="密码" />
-      <button id="btn-login">登录</button>
-      <button id="btn-signup">注册</button>
-      <button id="btn-github">GitHub 登录</button>
-      <p id="login-msg"></p>
+
+    <!-- [NEW] 认证界面容器 -->
+    <div id="auth-container" style="display: none; justify-content: center; align-items: center; height: 100vh;">
+        <div style="width: 320px; padding: 2rem; background-color: var(--color-surface); border-radius: 8px; box-shadow: var(--shadow-soft);">
+            <h2 style="text-align: center; margin-bottom: 1.5rem;">欢迎使用 TaskMaster</h2>
+            <div id="auth-form-container">
+                <!-- 登录表单 -->
+                <form id="login-form" style="display: grid; gap: 1rem;">
+                    <input type="email" id="login-email" placeholder="邮箱" required>
+                    <input type="password" id="login-password" placeholder="密码" required>
+                    <button type="submit" class="btn-primary">登录</button>
+                    <button type="button" id="show-register-btn" class="btn">没有账户？去注册</button>
+                </form>
+                <!-- 注册表单 (默认隐藏) -->
+                <form id="register-form" style="display: none; grid-gap: 1rem;">
+                    <input type="email" id="register-email" placeholder="邮箱" required>
+                    <input type="password" id="register-password" placeholder="密码 (至少6位)" required>
+                    <button type="submit" class="btn-primary">注册</button>
+                    <button type="button" id="show-login-btn" class="btn">已有账户？去登录</button>
+                </form>
+            </div>
+            <p id="auth-error" style="color: var(--color-danger); text-align: center; margin-top: 1rem; min-height: 1.2em;"></p>
+        </div>
     </div>
-  </div>
 
-  <!-- 主应用 -->
-  <div id="app" class="hidden">
-    <div class="app-container">
-      <aside class="sidebar">
-        <div class="sidebar-section">
-          <input id="search-box" placeholder="🔍 搜索任务..." />
-        </div>
-        <div class="sidebar-section">
-          <h3>排序选项</h3>
-          <button id="sort-urgency" class="btn">按重要程度</button>
-          <button id="sort-status" class="btn">按任务状态</button>
-          <button id="clear-filter" class="btn-primary">清除筛选</button>
-        </div>
-        <div class="sidebar-section">
-          <h3>任务统计</h3>
-          <label>开始:</label><input id="stats-start-date" type="date" /><br>
-          <label>结束:</label><input id="stats-end-date" type="date" />
-          <div>总数: <span id="stat-total">0</span></div>
-          <div>完成: <span id="stat-completed">0</span></div>
-          <div>未完成: <span id="stat-pending">0</span></div>
-        </div>
-        <div class="sidebar-section">
-          <h3>紧急任务 (近2天)</h3>
-          <ul id="urgent-tasks-list"></ul>
-        </div>
-        <div class="sidebar-section">
-          <button id="backup-data" class="btn">备份数据</button>
-        </div>
-      </aside>
-      <main class="main-content">
-        <div class="tabs">
-          <button data-tab="tasks" class="tab-button active">任务列表</button>
-          <button data-tab="progress" class="tab-button">每周进展</button>
-        </div>
-        <div id="tab-tasks" class="tab-content">
-          <!-- 任务管理逻辑与 TaskMaster-v1.0.html 完全一致，此处省略，直接引入原脚本 -->
-          <!-- 你可以将 TaskMaster-v1.0.html 的 <script>
-window.addEventListener('DOMContentLoaded', () => {
-  // 初始化 Supabase 客户端
-  const { createClient } = supabase;
-  const supabaseClient = createClient(
-    'https://oprqecajnzvzusjqqolk.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wcnFlY2Fqbnp2enVzanFxb2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMTQzMzMsImV4cCI6MjA2OTU5MDMzM30.lY691Yw7u6ipUxXW6inYAnkv-ohJT96OWTAU-usMJOw'
-  );
+    <!-- [MODIFIED] 主应用容器，默认隐藏 -->
+    <div class="app-container" style="display: none;">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-section"> <input type="text" id="search-box" placeholder="🔍 搜索任务..."> </div>
+            <div class="sidebar-section">
+                <h3>排序选项</h3>
+                <div style="display: flex; flex-direction: column; gap: 0.6rem;"> <button id="sort-urgency" class="btn">按重要程度</button> <button id="sort-status" class="btn">按任务状态</button> <button id="clear-filter" class="btn-primary">清除筛选与排序</button> </div>
+            </div>
+            <div class="sidebar-section">
+                <h3>任务统计</h3>
+                <div class="stat-date-range"> <label style="font-size:0.8rem; color:var(--color-text-secondary);">开始日期:</label> <input type="date" id="stats-start-date"> <label style="font-size:0.8rem; color:var(--color-text-secondary); margin-top:0.5rem;">结束日期:</label> <input type="date" id="stats-end-date"> </div>
+                <div id="stats-display"> <div class="stat-item"><div id="stat-total" class="stat-number">0</div><div class="stat-label">总数</div></div> <div class="stat-item"><div id="stat-completed" class="stat-number" style="color:var(--color-success)">0</div><div class="stat-label">已完成</div></div> <div class="stat-item"><div id="stat-pending" class="stat-number" style="color:var(--color-danger)">0</div><div class="stat-label">未完成</div></div> </div>
+            </div>
+            <div class="sidebar-section urgent-tasks-section">
+                <h3>紧急任务提醒 (近2天)</h3>
+                <div class="list-container"> <ul id="urgent-tasks-list"></ul> </div>
+            </div>
+            <div class="sidebar-section">
+                <h3>数据操作</h3>
+                <!-- [MODIFIED] 添加了登出按钮 -->
+                <div style="display: flex; flex-direction: column; gap: 10px;"> 
+                    <button id="backup-data" class="btn">备份数据到本地</button> 
+                    <button id="logout-btn" class="btn" style="background-color: #fdd; color: #c33;">退出登录</button>
+                </div>
+            </div>
+        </aside>
 
-  // 登录/注册按钮
-  const btnLogin = document.getElementById('btn-login');
-  const btnSignup = document.getElementById('btn-signup');
-  const btnGithub = document.getElementById('btn-github');
-  const loginMsg = document.getElementById('login-msg');
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <nav class="tabs"> <button class="tab-button active" data-tab="tasks">任务列表</button> <button class="tab-button" data-tab="progress">每周进展</button> </nav>
+            <div id="tab-tasks" class="tab-pane active tab-content">
+                <form id="add-task-form"> <input type="text" id="task-name" placeholder="输入任务名称..." required> <input type="date" id="task-start-date" required> <input type="date" id="task-end-date" required> <select id="task-urgency" required></select> <button type="submit" class="btn-primary">添加</button> <button type="button" id="batch-op-btn" class="btn">批量添加</button> </form>
+                <div class="task-list-container">
+                    <table id="task-table">
+                        <thead><tr><th style="width: 5%;">#</th><th style="width: 40%;">任务名称</th><th style="width: 15%;">起止日期</th><th style="width: 15%;">重要程度</th><th style="width: 15%;">状态</th><th style="width: 10%;">操作</th></tr></thead>
+                        <tbody id="task-list-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="tab-progress" class="tab-pane tab-content">
+                <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap;"> <label for="week-selector">选择周:</label> <select id="week-selector" style="width: 250px;"></select> <button id="generate-report-btn" class="btn-primary">刷新周报</button> <button id="save-report-btn" class="btn">保存周报</button> </div>
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; height: calc(100% - 60px);">
+                    <section style="background-color: var(--color-background); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column; overflow: hidden;">
+                        <h3>本周相关任务</h3>
+                        <div id="weekly-plan-display" style="flex-grow: 1; overflow-y: auto; background-color: var(--color-surface); padding: 1rem; border-radius: 8px; white-space: pre-wrap; font-size: 0.9rem;"></div>
+                    </section>
+                    <section style="background-color: var(--color-background); border-radius: 10px; padding: 1.5rem; display: flex; flex-direction: column; overflow: hidden;">
+                        <h3>周报总结 (可编辑)</h3>
+                        <textarea id="generated-report-area" style="flex-grow: 1; resize: none; border: none; background-color: var(--color-surface); padding: 1rem; border-radius: 8px; font-size: 0.9rem;"></textarea>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 模态框 HTML (没有修改) -->
+    <div id="batch-modal" class="modal"> <div class="modal-content"> <div class="modal-header"><h2>批量添加任务</h2><button class="modal-close" data-target="batch-modal">×</button></div> <div class="modal-body"> <div id="batch-tasks-container"><div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center;"><input type="text" class="batch-name" placeholder="任务名称"><input type="date" class="batch-start-date"><input type="date" class="batch-end-date"><select class="batch-urgency"></select></div></div> <button id="add-batch-row" class="btn" style="margin-top: 10px;">+ 添加另一行</button> </div> <div class="modal-footer"> <button class="btn modal-close" data-target="batch-modal">取消</button> <button id="save-batch-btn" class="btn-primary">保存任务</button> </div> </div> </div>
+    <div id="edit-modal" class="modal"> <div class="modal-content" style="max-width: 600px;"> <div class="modal-header"><h2>编辑任务</h2><button class="modal-close" data-target="edit-modal">×</button></div> <div class="modal-body"> <input type="hidden" id="edit-task-id"> <div style="border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; margin-bottom: 1rem;"> <h4>录入今日进展</h4> <div style="display: flex; gap: 10px; margin-top: 5px;"><input type="text" id="new-progress-content" placeholder="输入进展内容..." style="flex-grow: 1;"><button id="add-progress-btn" class="btn">添加</button></div> </div> <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"> <div><label>任务名称</label><input type="text" id="edit-task-name"></div> <div><label>重要程度</label><select id="edit-task-urgency"></select></div> <div><label>开始日期</label><input type="date" id="edit-task-start-date"></div> <div><label>结束日期</label><input type="date" id="edit-task-end-date"></div> </div> <div style="margin-top: 15px;"><label>任务状态</label><select id="edit-task-status"></select></div> <div style="margin-top: 15px;"><label>备注</label><textarea id="edit-task-notes" rows="3"></textarea></div> <div style="margin-top: 15px;"> <h4>历史进展记录</h4> <div id="edit-daily-progress-container"></div> </div> </div> <div class="modal-footer"> <button class="btn modal-close" data-target="edit-modal">取消</button> <button id="save-edit-btn" class="btn-primary">保存更改</button> </div> </div> </div>
 
-  btnLogin.addEventListener('click', async () => {
-    loginMsg.textContent = '';
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) loginMsg.textContent = error.message;
-    else location.reload();
-  });
+    <!-- [NEW] 引入 Supabase JS 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  btnSignup.addEventListener('click', async () => {
-    loginMsg.textContent = '';
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const { error } = await supabaseClient.auth.signUp({ email, password });
-    loginMsg.textContent = error ? error.message : '注册成功，请检查邮箱并验证';
-  });
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // [NEW] SUPABASE 初始化
+    // =================================================================================
+    // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ 把这里替换成你自己的 Supabase URL 和 Key ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
+    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+    const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+    // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
-  btnGithub.addEventListener('click', () => {
-    supabaseClient.auth.signInWithOAuth({ provider: 'github' });
-  });
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // 会话检查
-  async function checkSession() {
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (session) {
-      document.getElementById('login-page').style.display = 'none';
-      document.getElementById('app').classList.remove('hidden');
-      // TODO: 在此初始化 TaskMaster 功能
+    // --- 定义常量和全局变量 (基本不变) ---
+    const URGENCY_LEVELS = {"非常重要紧急":{value:4},"重要不紧急":{value:3},"紧急不重要":{value:2},"不重要不紧急":{value:1}};
+    const STATUS_OPTIONS = ["待办","进行中","已暂停","已完成"];
+    const URGENT_REMINDER_DAYS = 2;
+    let tasks = [];
+    let weeklyProgress = {};
+    let currentSort = { key: 'created_at', reverse: true }; // 默认按创建时间降序
+    let currentFilter = '';
+    let currentUser = null;
+
+    // --- DOM 元素缓存 ---
+    const taskListBody = document.getElementById('task-list-body');
+    const searchBox = document.getElementById('search-box');
+    const statsStartDateInput = document.getElementById('stats-start-date');
+    const statsEndDateInput = document.getElementById('stats-end-date');
+    const appContainer = document.querySelector('.app-container');
+    const authContainer = document.getElementById('auth-container');
+
+
+    // [NEW] 主流程控制：认证检查
+    // =================================================================================
+    supabase.auth.onAuthStateChange((event, session) => {
+        if (session) {
+            currentUser = session.user;
+            authContainer.style.display = 'none';
+            appContainer.style.display = 'flex';
+            bootstrapApp(); // 用户已登录，启动应用
+        } else {
+            currentUser = null;
+            authContainer.style.display = 'flex';
+            appContainer.style.display = 'none';
+        }
+    });
+
+    // [NEW] 应用启动函数
+    async function bootstrapApp() {
+        await loadData();
+        setupEventListeners();
+        populateSelect(document.getElementById('task-urgency'), Object.keys(URGENCY_LEVELS));
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        document.getElementById('task-start-date').valueAsDate = today;
+        document.getElementById('task-end-date').valueAsDate = today;
+        statsStartDateInput.valueAsDate = firstDayOfMonth;
+        statsEndDateInput.valueAsDate = today;
+        render();
     }
-  }
+    
+    // [MODIFIED] 数据加载: 从 Supabase 获取
+    // =================================================================================
+    async function loadData() {
+        // 获取任务
+        const { data: taskData, error: taskError } = await supabase
+            .from('tasks')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-  supabaseClient.auth.onAuthStateChange(() => {
-    checkSession();
-  });
+        if (taskError) {
+            console.error('获取任务失败:', taskError);
+            alert(`加载数据失败: ${taskError.message}`);
+            tasks = [];
+        } else {
+            // 注意：daily_progress 将在打开编辑模态框时按需加载
+            taskData.forEach(task => task.daily_progress = {}); 
+            tasks = taskData;
+        }
 
-  // 首次执行
-  checkSession();
+        // 获取周报
+        const { data: reportData, error: reportError } = await supabase
+            .from('weekly_reports')
+            .select('*');
+        if (reportError) {
+            console.error('获取周报失败:', reportError);
+            weeklyProgress = {};
+        } else {
+            weeklyProgress = (reportData || []).reduce((acc, report) => {
+                acc[report.week_id] = { generated_report: report.report_content };
+                return acc;
+            }, {});
+        }
+    }
+
+    // --- [NO CHANGE] 渲染主函数 (几乎不变) ---
+    function render() {
+        renderTaskList();
+        updateStats();
+        updateUrgentTasks();
+        populateWeekSelector();
+        loadSelectedWeekData();
+    }
+    
+    // --- [NO CHANGE] 渲染任务列表 (几乎不变) ---
+    function renderTaskList() {
+        taskListBody.innerHTML = '';
+        const filteredAndSortedTasks = getFilteredAndSortedTasks();
+        if (filteredAndSortedTasks.length === 0) {
+            taskListBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px; color: var(--color-text-secondary);">没有找到任务...</td></tr>`;
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+        filteredAndSortedTasks.forEach((task, index) => {
+            const tr = document.createElement('tr');
+            tr.dataset.taskId = task.id;
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><div class="task-name">${escapeHtml(task.name)}</div></td>
+                <td><div style="font-size: 0.9rem;">${task.start_date}<br><span style="color:var(--color-text-secondary); font-size:0.8rem;">到 ${task.end_date}</span></div></td>
+                <td><select class="inline-edit" data-task-id="${task.id}" data-type="urgency"></select></td>
+                <td><select class="inline-edit" data-task-id="${task.id}" data-type="status"></select></td>
+                <td class="task-actions"><button title="编辑/查看详情">✏️</button><button title="删除任务">🗑️</button></td>
+            `;
+            
+            const applySelectStyles = (select, type) => {
+                const badgeClass = type === 'urgency' ? `urgency-${URGENCY_LEVELS[select.value]?.value || 1}` : select.value.replace(/\s+/g, '');
+                select.className = `inline-edit badge ${type}-badge ${badgeClass}`;
+            };
+            
+            const urgencySelect = tr.querySelector('[data-type="urgency"]');
+            const statusSelect = tr.querySelector('[data-type="status"]');
+            
+            populateSelect(urgencySelect, Object.keys(URGENCY_LEVELS), task.urgency);
+            populateSelect(statusSelect, STATUS_OPTIONS, task.status);
+            
+            urgencySelect.addEventListener('change', e => { updateTask(e.target.dataset.taskId, 'urgency', e.target.value); applySelectStyles(e.target, 'urgency'); });
+            statusSelect.addEventListener('change', e => { updateTask(e.target.dataset.taskId, 'status', e.target.value); applySelectStyles(e.target, 'status'); });
+            
+            applySelectStyles(urgencySelect, 'urgency');
+            applySelectStyles(statusSelect, 'status');
+            fragment.appendChild(tr);
+        });
+        taskListBody.appendChild(fragment);
+    }
+    
+    // --- [NO CHANGE] 更新统计/紧急任务 (不变) ---
+    function updateStats() { /* ... 代码不变 ... */  let tasksToCount = tasks; const startDateStr = statsStartDateInput.value; const endDateStr = statsEndDateInput.value; if (startDateStr && endDateStr) { const rangeStart = new Date(startDateStr); rangeStart.setHours(0,0,0,0); const rangeEnd = new Date(endDateStr); rangeEnd.setHours(23,59,59,999); tasksToCount = tasks.filter(task => new Date(task.start_date) <= rangeEnd && new Date(task.end_date) >= rangeStart); } document.getElementById('stat-total').textContent = tasksToCount.length; document.getElementById('stat-completed').textContent = tasksToCount.filter(t => t.status === '已完成').length; document.getElementById('stat-pending').textContent = tasksToCount.filter(t => t.status !== '已完成').length;}
+    function updateUrgentTasks() { /* ... 代码不变 ... */ const list = document.getElementById('urgent-tasks-list'); list.innerHTML = ''; const today = new Date(); today.setHours(0,0,0,0); const reminderDeadline = new Date(); reminderDeadline.setDate(today.getDate() + URGENT_REMINDER_DAYS); const urgentTasks = tasks.filter(t => t.status !== '已完成' && t.end_date && new Date(t.end_date) >= today && new Date(t.end_date) <= reminderDeadline).sort((a,b) => new Date(a.end_date) - new Date(b.end_date)); if (urgentTasks.length === 0) { list.innerHTML = `<li style="color: var(--color-text-secondary); font-style: italic; border: none;">无紧急任务</li>`; } else { const fragment = document.createDocumentFragment(); urgentTasks.forEach(task => { const li = document.createElement('li'); li.className = `urgency-${URGENCY_LEVELS[task.urgency]?.value || 1}`; li.innerHTML = `${escapeHtml(task.name)}<small>到期: ${task.end_date}</small>`; fragment.appendChild(li); }); list.appendChild(fragment); } }
+
+    // [MODIFIED] 事件监听设置
+    // =================================================================================
+    function setupEventListeners() {
+        // 主应用监听器
+        document.getElementById('add-task-form').addEventListener('submit', addTask);
+        searchBox.addEventListener('input', (e) => { currentFilter = e.target.value; renderTaskList(); });
+        document.getElementById('sort-urgency').addEventListener('click', () => setSort('urgency'));
+        document.getElementById('sort-status').addEventListener('click', () => setSort('status'));
+        document.getElementById('clear-filter').addEventListener('click', () => { searchBox.value = ''; currentFilter = ''; currentSort = { key: 'created_at', reverse: true }; updateSortButtons(); renderTaskList(); });
+        statsStartDateInput.addEventListener('change', updateStats);
+        statsEndDateInput.addEventListener('change', updateStats);
+        document.querySelectorAll('.tab-button').forEach(button => button.addEventListener('click', (e) => { document.querySelector('.tab-button.active')?.classList.remove('active'); document.querySelector('.tab-pane.active')?.classList.remove('active'); e.currentTarget.classList.add('active'); document.getElementById(`tab-${e.currentTarget.dataset.tab}`).classList.add('active'); }));
+        taskListBody.addEventListener('click', e => {
+            const targetButton = e.target.closest('button');
+            if (!targetButton) return;
+            const tr = e.target.closest('tr');
+            if(!tr) return;
+            const taskId = tr.dataset.taskId;
+            if (targetButton.title.includes('删除')) deleteTask(taskId);
+            if (targetButton.title.includes('编辑')) openEditModal(taskId);
+        });
+        document.getElementById('week-selector').addEventListener('change', loadSelectedWeekData);
+        document.getElementById('generate-report-btn').addEventListener('click', generateWeeklyReport);
+        document.getElementById('save-report-btn').addEventListener('click', saveWeeklyReport);
+        document.getElementById('backup-data').addEventListener('click', backupData);
+        document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.currentTarget.dataset.target)));
+
+        // [NEW] 登出按钮
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
+        });
+
+        setupBatchModalListeners();
+        setupEditModalListeners();
+    }
+    
+    // [NEW] 认证相关事件监听
+    function setupAuthEventListeners() {
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const authError = document.getElementById('auth-error');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            authError.textContent = '登录中...';
+            const { error } = await supabase.auth.signInWithPassword({
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value,
+            });
+            if (error) authError.textContent = `登录失败: ${error.message}`;
+            else authError.textContent = '';
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            authError.textContent = '注册中...';
+            const { error } = await supabase.auth.signUp({
+                email: document.getElementById('register-email').value,
+                password: document.getElementById('register-password').value,
+            });
+            if (error) {
+                authError.textContent = `注册失败: ${error.message}`;
+            } else {
+                authError.textContent = '注册成功！请检查邮箱以完成验证。';
+                loginForm.style.display = 'grid';
+                registerForm.style.display = 'none';
+            }
+        });
+
+        document.getElementById('show-register-btn').addEventListener('click', () => {
+            loginForm.style.display = 'none'; registerForm.style.display = 'grid'; authError.textContent = '';
+        });
+        document.getElementById('show-login-btn').addEventListener('click', () => {
+            loginForm.style.display = 'grid'; registerForm.style.display = 'none'; authError.textContent = '';
+        });
+    }
+    
+    // [NO CHANGE] 批量模态框监听
+    function setupBatchModalListeners() { /* ... 代码不变 ... */ const batchModal = document.getElementById('batch-modal'); document.getElementById('batch-op-btn').addEventListener('click', () => openModal('batch-modal')); batchModal.querySelector('#save-batch-btn').addEventListener('click', saveManualBatch); batchModal.querySelector('#add-batch-row').addEventListener('click', () => { const container = batchModal.querySelector('#batch-tasks-container'); const newRow = container.firstElementChild.cloneNode(true); newRow.querySelectorAll('input').forEach(i => i.value = ''); populateSelect(newRow.querySelector('.batch-urgency'), Object.keys(URGENCY_LEVELS)); container.appendChild(newRow); }); populateSelect(batchModal.querySelector('.batch-urgency'), Object.keys(URGENCY_LEVELS));}
+    
+    // [NO CHANGE] 编辑模态框监听 (但其调用的函数已被修改)
+    function setupEditModalListeners(){ /* ... 代码不变 ... */ const editModal = document.getElementById('edit-modal'); editModal.querySelector('#save-edit-btn').addEventListener('click', saveEditTask); editModal.querySelector('#add-progress-btn').addEventListener('click', addDailyProgress); editModal.querySelector('#edit-daily-progress-container').addEventListener('click', e => { const deleteBtn = e.target.closest('.delete-progress-btn'); if (deleteBtn) { const { progressId } = deleteBtn.dataset; deleteDailyProgress(document.getElementById('edit-task-id').value, progressId); } });}
+
+    // [MODIFIED] CRUD 及核心功能函数，全部改为 async
+    // =================================================================================
+    
+    async function addTask(e) {
+        e.preventDefault();
+        const form = e.target;
+        const name = form.querySelector('#task-name').value.trim();
+        const startDate = form.querySelector('#task-start-date').value;
+        const endDate = form.querySelector('#task-end-date').value;
+        const urgency = form.querySelector('#task-urgency').value;
+        if (!name || !startDate || !endDate || !urgency) { alert('请填写所有必填项！'); return; }
+        if (new Date(endDate) < new Date(startDate)) { alert('结束日期不能早于开始日期！'); return; }
+        
+        const { data, error } = await supabase.from('tasks').insert({ name, start_date: startDate, end_date: endDate, urgency, status: '待办' }).select();
+        
+        if (error) {
+            alert(`添加失败: ${error.message}`);
+        } else {
+            const newTask = { ...data[0], daily_progress: {} };
+            tasks.unshift(newTask);
+            render();
+            form.reset();
+            form.querySelector('#task-start-date').valueAsDate = new Date();
+            form.querySelector('#task-end-date').valueAsDate = new Date();
+        }
+    }
+    
+    async function updateTask(id, field, value) {
+        const { error } = await supabase.from('tasks').update({ [field]: value }).eq('id', id);
+        if (error) {
+            alert(`更新失败: ${error.message}`);
+        } else {
+            const task = tasks.find(t => t.id === id);
+            if(task) task[field] = value;
+            render();
+        }
+    }
+
+    async function deleteTask(id) {
+        if (confirm('确定要删除这个任务吗？此操作将同时删除其所有进展记录！')) {
+            const { error } = await supabase.from('tasks').delete().eq('id', id);
+            if(error) {
+                alert(`删除失败: ${error.message}`);
+            } else {
+                tasks = tasks.filter(t => t.id !== id);
+                render();
+            }
+        }
+    }
+    
+    async function openEditModal(taskId) {
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+        const modal = document.getElementById('edit-modal');
+        // 先填充基本信息
+        modal.querySelector('#edit-task-id').value = taskId;
+        modal.querySelector('#edit-task-name').value = task.name;
+        modal.querySelector('#edit-task-start-date').value = task.start_date;
+        modal.querySelector('#edit-task-end-date').value = task.end_date;
+        modal.querySelector('#edit-task-notes').value = task.notes || '';
+        populateSelect(modal.querySelector('#edit-task-urgency'), Object.keys(URGENCY_LEVELS), task.urgency);
+        populateSelect(modal.querySelector('#edit-task-status'), STATUS_OPTIONS, task.status);
+        
+        // 异步获取并渲染每日进展
+        renderDailyProgressEditor(task.id, []); // 先清空并显示加载中...
+        openModal('edit-modal');
+        const { data, error } = await supabase.from('daily_progress').select('*').eq('task_id', taskId).order('created_at', { ascending: false });
+        if (error) {
+            alert('无法加载进展记录。');
+        } else {
+            task.daily_progress = data || [];
+            renderDailyProgressEditor(task.id, task.daily_progress);
+        }
+    }
+
+    function renderDailyProgressEditor(taskId, progressEntries) {
+        const container = document.getElementById('edit-daily-progress-container');
+        if (progressEntries.length === 0) {
+            container.innerHTML = '<p style="color: var(--color-text-secondary); font-style: italic;">无进展记录</p>';
+            return;
+        }
+        
+        // 按日期分组
+        const groupedByDate = progressEntries.reduce((acc, entry) => {
+            const date = entry.progress_date;
+            if (!acc[date]) acc[date] = [];
+            acc[date].push(entry);
+            return acc;
+        }, {});
+
+        const fragment = document.createDocumentFragment();
+        Object.keys(groupedByDate).sort((a,b) => new Date(b) - new Date(a)).forEach(date => {
+            const dateGroup = document.createElement('div');
+            dateGroup.style.marginBottom = '10px';
+            dateGroup.innerHTML = `<strong>${date}</strong>`;
+            const ul = document.createElement('ul');
+            ul.style.listStyle = 'none'; ul.style.paddingLeft = '15px';
+            groupedByDate[date].forEach(entry => {
+                const li = document.createElement('li');
+                li.style.display = 'flex'; li.style.justifyContent = 'space-between';
+                li.innerHTML = `<span>${escapeHtml(entry.content)}</span> <button class="delete-progress-btn" data-progress-id="${entry.id}" style="color:red; background:none; border:none; cursor:pointer; font-size:1.2em; line-height:1;">×</button>`;
+                ul.appendChild(li);
+            });
+            dateGroup.appendChild(ul);
+            fragment.appendChild(dateGroup);
+        });
+        container.innerHTML = ''; // 清空
+        container.appendChild(fragment);
+    }
+
+    async function saveEditTask() {
+        const id = document.getElementById('edit-task-id').value;
+        const task = tasks.find(t => t.id === id);
+        if (task) {
+            const updates = {
+                name: document.getElementById('edit-task-name').value,
+                start_date: document.getElementById('edit-task-start-date').value,
+                end_date: document.getElementById('edit-task-end-date').value,
+                urgency: document.getElementById('edit-task-urgency').value,
+                status: document.getElementById('edit-task-status').value,
+                notes: document.getElementById('edit-task-notes').value
+            };
+            const { error } = await supabase.from('tasks').update(updates).eq('id', id);
+            if (error) {
+                alert(`保存失败: ${error.message}`);
+            } else {
+                Object.assign(task, updates);
+                render();
+                closeModal('edit-modal');
+            }
+        }
+    }
+
+    async function addDailyProgress() {
+        const taskId = document.getElementById('edit-task-id').value;
+        const contentInput = document.getElementById('new-progress-content');
+        const content = contentInput.value.trim();
+        if (!taskId || !content) return;
+        
+        const { data, error } = await supabase.from('daily_progress').insert({ task_id: taskId, content: content }).select();
+        
+        if (error) {
+            alert(`添加进展失败: ${error.message}`);
+        } else {
+            const task = tasks.find(t => t.id === taskId);
+            task.daily_progress.unshift(data[0]);
+            renderDailyProgressEditor(taskId, task.daily_progress);
+            contentInput.value = '';
+        }
+    }
+
+    async function deleteDailyProgress(taskId, progressId) {
+        if (!confirm('确定删除这条进展记录吗？')) return;
+        const { error } = await supabase.from('daily_progress').delete().eq('id', progressId);
+        if (error) {
+            alert(`删除失败: ${error.message}`);
+        } else {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.daily_progress = task.daily_progress.filter(p => p.id !== Number(progressId));
+                renderDailyProgressEditor(taskId, task.daily_progress);
+            }
+        }
+    }
+    
+    async function saveWeeklyReport() {
+        const selectedWeekId = document.getElementById('week-selector').value;
+        if (!selectedWeekId) return;
+        const reportContent = document.getElementById('generated-report-area').value;
+
+        // upsert = update or insert. 如果记录已存在则更新，不存在则插入
+        const { error } = await supabase.from('weekly_reports').upsert({
+            week_id: selectedWeekId,
+            report_content: reportContent,
+            user_id: currentUser.id
+        }, { onConflict: 'user_id, week_id' }); // 指定冲突的列
+
+        if (error) {
+            alert(`周报保存失败: ${error.message}`);
+        } else {
+            weeklyProgress[selectedWeekId] = { generated_report: reportContent };
+            alert('周报已保存！');
+        }
+    }
+
+    async function saveManualBatch() {
+        const container = document.getElementById('batch-tasks-container');
+        const newTasks = [];
+        container.querySelectorAll('div').forEach(row => {
+            const name = row.querySelector('.batch-name').value.trim();
+            const startDate = row.querySelector('.batch-start-date').value;
+            const endDate = row.querySelector('.batch-end-date').value;
+            const urgency = row.querySelector('.batch-urgency').value;
+            if(name && startDate && endDate && urgency) {
+                newTasks.push({ name, start_date: startDate, end_date: endDate, urgency, status: '待办' });
+            }
+        });
+
+        if (newTasks.length > 0) {
+            const { data, error } = await supabase.from('tasks').insert(newTasks).select();
+            if (error) {
+                alert(`批量添加失败: ${error.message}`);
+            } else {
+                const addedTasks = data.map(t => ({...t, daily_progress: {}}));
+                tasks.unshift(...addedTasks);
+                render();
+                alert(`成功添加 ${data.length} 个任务！`);
+                closeModal('batch-modal');
+            }
+        } else {
+            alert('没有输入任何有效的任务。');
+        }
+    }
+    
+    function backupData() { const dataToBackup = { tasks, weeklyProgress }; const blob = new Blob([JSON.stringify(dataToBackup, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `TaskMaster_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); }
+    function getFilteredAndSortedTasks() { let result = [...tasks]; if (currentFilter) { const searchTerm = currentFilter.toLowerCase(); result = result.filter(task => Object.values(task).some(val => String(val).toLowerCase().includes(searchTerm))); } const { key, reverse } = currentSort; result.sort((a, b) => { let valA, valB; switch(key) { case 'urgency': valA = URGENCY_LEVELS[a.urgency]?.value || 0; valB = URGENCY_LEVELS[b.urgency]?.value || 0; break; case 'status': valA = STATUS_OPTIONS.indexOf(a.status); valB = STATUS_OPTIONS.indexOf(b.status); break; default: valA = new Date(a.created_at); valB = new Date(b.created_at); } if (valA < valB) return reverse ? 1 : -1; if (valA > valB) return reverse ? -1 : 1; return 0; }); return result; }
+    function setSort(key) { if (currentSort.key === key) { currentSort.reverse = !currentSort.reverse; } else { currentSort.key = key; currentSort.reverse = (key === 'urgency'); } updateSortButtons(); renderTaskList(); }
+    function updateSortButtons() { document.querySelectorAll('.sidebar-section button[id^="sort-"]').forEach(btn => { btn.classList.remove('btn-primary'); let baseText = {'sort-urgency':'按重要程度','sort-status':'按任务状态'}[btn.id]; const key = btn.id.replace('sort-', ''); if(currentSort.key === key) { btn.classList.add('btn-primary'); btn.textContent = `${baseText} ${currentSort.reverse ? '▼' : '▲'}`; } else { btn.textContent = baseText; } }); }
+    function populateSelect(select, options, selectedValue = null) { select.innerHTML = options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === selectedValue ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join(''); }
+    function escapeHtml(str) { return String(str || '').replace(/[&<>"']/g, m => ({'&':'&','<':'<','>':'>','"':'"',"'":'''})[m]); }
+    function openModal(id) { document.getElementById(id)?.classList.add('active'); }
+    function closeModal(id) { document.getElementById(id)?.classList.remove('active'); }
+    function getWeekIdFromDate(d) { const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7)); const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1)); const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7); return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`; }
+    function getWeekStartEndDates(weekId) { const [year, week] = weekId.split('-W').map(Number); const d = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7)); const day = d.getUTCDay() || 7; d.setUTCDate(d.getUTCDate() + 1 - day); return [new Date(d), new Date(d.setUTCDate(d.getUTCDate() + 6))]; }
+    function formatDate(date, full = false) { return date.toLocaleDateString('zh-CN', { year: full?'numeric':undefined, month: '2-digit', day: '2-digit' }).replace(/\//g, '-'); }
+    function populateWeekSelector() { const weekIds = new Set(); tasks.forEach(task => { if (task.start_date) weekIds.add(getWeekIdFromDate(new Date(task.start_date))); if (task.end_date) weekIds.add(getWeekIdFromDate(new Date(task.end_date))); Object.keys(task.daily_progress || {}).forEach(dateStr => weekIds.add(getWeekIdFromDate(new Date(dateStr)))); }); Object.keys(weeklyProgress).forEach(weekId => weekIds.add(weekId)); weekIds.add(getWeekIdFromDate(new Date())); const sortedWeeks = Array.from(weekIds).sort().reverse(); const selector = document.getElementById('week-selector'); selector.innerHTML = sortedWeeks.map(weekId => { const [start, end] = getWeekStartEndDates(weekId); return `<option value="${weekId}">${weekId} (${formatDate(start)} - ${formatDate(end)})</option>`; }).join(''); const currentWeekId = getWeekIdFromDate(new Date()); if(sortedWeeks.includes(currentWeekId)) selector.value = currentWeekId; }
+    function loadSelectedWeekData() { const selectedWeekId = document.getElementById('week-selector').value; if (!selectedWeekId) return; const [weekStart, weekEnd] = getWeekStartEndDates(selectedWeekId); const relevantTasks = tasks.filter(task => new Date(task.start_date) <= weekEnd && new Date(task.end_date) >= weekStart); document.getElementById('weekly-plan-display').innerHTML = relevantTasks.length > 0 ? '<ul>' + relevantTasks.map(t => `<li><strong>${escapeHtml(t.name)}</strong><br><small>${t.status} | ${t.urgency}</small></li>`).join('') + '</ul>' : '<p style="color: var(--color-text-secondary);">本周无相关计划任务。</p>'; document.getElementById('generated-report-area').value = weeklyProgress[selectedWeekId]?.generated_report || ''; }
+    function generateWeeklyReport() { const selectedWeekId = document.getElementById('week-selector').value; if (!selectedWeekId) return; const [weekStart, weekEnd] = getWeekStartEndDates(selectedWeekId); let reportText = `## 周报 (${selectedWeekId})\n周期: ${formatDate(weekStart, true)} 至 ${formatDate(weekEnd, true)}\n\n--- 本周任务进展与记录 ---\n\n`; const tasksWithActivity = tasks.filter(task => (new Date(task.start_date) <= weekEnd && new Date(task.end_date) >= weekStart)); if (tasksWithActivity.length === 0) { reportText += "本周没有相关任务。\n"; } else { tasksWithActivity.forEach(task => { reportText += `### 任务: ${task.name} (${task.status}, ${task.urgency})\n`; const progressInWeek = (task.daily_progress || []).filter(p => new Date(p.progress_date) >= weekStart && new Date(p.progress_date) <= weekEnd); if (progressInWeek.length > 0) { progressInWeek.sort((a,b) => new Date(a.progress_date) - new Date(b.progress_date)).forEach(entry => { reportText += `  - ${entry.progress_date}: ${entry.content}\n`; }); } else { reportText += `  - 本周无明确进展记录。\n`; } if (task.status === '已完成' && new Date(task.end_date) >= weekStart && new Date(task.end_date) <= weekEnd) { reportText += `  - 任务于 ${task.end_date} 完成。\n`; } reportText += "\n"; }); } document.getElementById('generated-report-area').value = reportText; }
+
+    // 初始化认证监听
+    setupAuthEventListeners();
+    
 });
 </script>
+
 </body>
 </html>
