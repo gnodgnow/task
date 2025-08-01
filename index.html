@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskMaster v1.0 - Supabase Edition</title>
     <style>
-        /* [没有修改] 您的所有 CSS 样式保持不变 */
         :root {
             --color-primary: #00999F; --color-primary-dark: #007f85; --color-accent: #FEEE30; --color-secondary-blue: #81D2E3; --color-bg-mint: #BCEDD8; --color-text-strong: #065758; --color-background: #f8f9fa; --color-surface: #ffffff; --color-border: #e9ecef; --color-text-primary: var(--color-text-strong); --color-text-secondary: #6c757d; --color-success: #28a745; --color-danger: #e74c3c; --shadow-soft: 0 4px 15px rgba(6, 87, 88, 0.1); --border-radius: 8px;
         }
@@ -72,19 +71,17 @@
 </head>
 <body>
 
-    <!-- [NEW] 认证界面容器 -->
+    <!-- 认证界面容器 -->
     <div id="auth-container" style="display: none; justify-content: center; align-items: center; height: 100vh;">
         <div style="width: 320px; padding: 2rem; background-color: var(--color-surface); border-radius: 8px; box-shadow: var(--shadow-soft);">
             <h2 style="text-align: center; margin-bottom: 1.5rem;">欢迎使用 TaskMaster</h2>
             <div id="auth-form-container">
-                <!-- 登录表单 -->
                 <form id="login-form" style="display: grid; gap: 1rem;">
                     <input type="email" id="login-email" placeholder="邮箱" required>
                     <input type="password" id="login-password" placeholder="密码" required>
                     <button type="submit" class="btn-primary">登录</button>
                     <button type="button" id="show-register-btn" class="btn">没有账户？去注册</button>
                 </form>
-                <!-- 注册表单 (默认隐藏) -->
                 <form id="register-form" style="display: none; grid-gap: 1rem;">
                     <input type="email" id="register-email" placeholder="邮箱" required>
                     <input type="password" id="register-password" placeholder="密码 (至少6位)" required>
@@ -96,9 +93,8 @@
         </div>
     </div>
 
-    <!-- [MODIFIED] 主应用容器，默认隐藏 -->
+    <!-- 主应用容器，默认隐藏 -->
     <div class="app-container" style="display: none;">
-        <!-- 侧边栏 -->
         <aside class="sidebar">
             <div class="sidebar-section"> <input type="text" id="search-box" placeholder="🔍 搜索任务..."> </div>
             <div class="sidebar-section">
@@ -116,7 +112,6 @@
             </div>
             <div class="sidebar-section">
                 <h3>数据操作</h3>
-                <!-- [MODIFIED] 添加了登出按钮 -->
                 <div style="display: flex; flex-direction: column; gap: 10px;"> 
                     <button id="backup-data" class="btn">备份数据到本地</button> 
                     <button id="logout-btn" class="btn" style="background-color: #fdd; color: #c33;">退出登录</button>
@@ -124,7 +119,6 @@
             </div>
         </aside>
 
-        <!-- 主内容区 -->
         <main class="main-content">
             <nav class="tabs"> <button class="tab-button active" data-tab="tasks">任务列表</button> <button class="tab-button" data-tab="progress">每周进展</button> </nav>
             <div id="tab-tasks" class="tab-pane active tab-content">
@@ -152,35 +146,31 @@
         </main>
     </div>
     
-    <!-- 模态框 HTML (没有修改) -->
     <div id="batch-modal" class="modal"> <div class="modal-content"> <div class="modal-header"><h2>批量添加任务</h2><button class="modal-close" data-target="batch-modal">×</button></div> <div class="modal-body"> <div id="batch-tasks-container"><div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center;"><input type="text" class="batch-name" placeholder="任务名称"><input type="date" class="batch-start-date"><input type="date" class="batch-end-date"><select class="batch-urgency"></select></div></div> <button id="add-batch-row" class="btn" style="margin-top: 10px;">+ 添加另一行</button> </div> <div class="modal-footer"> <button class="btn modal-close" data-target="batch-modal">取消</button> <button id="save-batch-btn" class="btn-primary">保存任务</button> </div> </div> </div>
     <div id="edit-modal" class="modal"> <div class="modal-content" style="max-width: 600px;"> <div class="modal-header"><h2>编辑任务</h2><button class="modal-close" data-target="edit-modal">×</button></div> <div class="modal-body"> <input type="hidden" id="edit-task-id"> <div style="border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; margin-bottom: 1rem;"> <h4>录入今日进展</h4> <div style="display: flex; gap: 10px; margin-top: 5px;"><input type="text" id="new-progress-content" placeholder="输入进展内容..." style="flex-grow: 1;"><button id="add-progress-btn" class="btn">添加</button></div> </div> <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"> <div><label>任务名称</label><input type="text" id="edit-task-name"></div> <div><label>重要程度</label><select id="edit-task-urgency"></select></div> <div><label>开始日期</label><input type="date" id="edit-task-start-date"></div> <div><label>结束日期</label><input type="date" id="edit-task-end-date"></div> </div> <div style="margin-top: 15px;"><label>任务状态</label><select id="edit-task-status"></select></div> <div style="margin-top: 15px;"><label>备注</label><textarea id="edit-task-notes" rows="3"></textarea></div> <div style="margin-top: 15px;"> <h4>历史进展记录</h4> <div id="edit-daily-progress-container"></div> </div> </div> <div class="modal-footer"> <button class="btn modal-close" data-target="edit-modal">取消</button> <button id="save-edit-btn" class="btn-primary">保存更改</button> </div> </div> </div>
 
-    <!-- [NEW] 引入 Supabase JS 库 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // [NEW] SUPABASE 初始化
     // =================================================================================
     // ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓ 把这里替换成你自己的 Supabase URL 和 Key ↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓
     const SUPABASE_URL = 'https://oprqecajnzvzusjqqolk.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wcnFlY2Fqbnp2enVzanFxb2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMTQzMzMsImV4cCI6MjA2OTU5MDMzM30.lY691Yw7u6ipUxXW6inYAnkv-ohJT96OWTAU-usMJOw';
     // ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
+    // =================================================================================
 
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // --- 定义常量和全局变量 (基本不变) ---
     const URGENCY_LEVELS = {"非常重要紧急":{value:4},"重要不紧急":{value:3},"紧急不重要":{value:2},"不重要不紧急":{value:1}};
     const STATUS_OPTIONS = ["待办","进行中","已暂停","已完成"];
     const URGENT_REMINDER_DAYS = 2;
     let tasks = [];
     let weeklyProgress = {};
-    let currentSort = { key: 'created_at', reverse: true }; // 默认按创建时间降序
+    let currentSort = { key: 'created_at', reverse: true };
     let currentFilter = '';
     let currentUser = null;
 
-    // --- DOM 元素缓存 ---
     const taskListBody = document.getElementById('task-list-body');
     const searchBox = document.getElementById('search-box');
     const statsStartDateInput = document.getElementById('stats-start-date');
@@ -188,15 +178,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const appContainer = document.querySelector('.app-container');
     const authContainer = document.getElementById('auth-container');
 
-
-    // [NEW] 主流程控制：认证检查
-    // =================================================================================
     supabase.auth.onAuthStateChange((event, session) => {
         if (session) {
             currentUser = session.user;
             authContainer.style.display = 'none';
             appContainer.style.display = 'flex';
-            bootstrapApp(); // 用户已登录，启动应用
+            bootstrapApp();
         } else {
             currentUser = null;
             authContainer.style.display = 'flex';
@@ -204,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // [NEW] 应用启动函数
     async function bootstrapApp() {
         await loadData();
         setupEventListeners();
@@ -218,10 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         render();
     }
     
-    // [MODIFIED] 数据加载: 从 Supabase 获取
-    // =================================================================================
     async function loadData() {
-        // 获取任务
         const { data: taskData, error: taskError } = await supabase
             .from('tasks')
             .select('*')
@@ -232,12 +215,10 @@ document.addEventListener('DOMContentLoaded', () => {
             alert(`加载数据失败: ${taskError.message}`);
             tasks = [];
         } else {
-            // 注意：daily_progress 将在打开编辑模态框时按需加载
             taskData.forEach(task => task.daily_progress = {}); 
             tasks = taskData;
         }
 
-        // 获取周报
         const { data: reportData, error: reportError } = await supabase
             .from('weekly_reports')
             .select('*');
@@ -252,7 +233,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- [NO CHANGE] 渲染主函数 (几乎不变) ---
     function render() {
         renderTaskList();
         updateStats();
@@ -261,7 +241,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loadSelectedWeekData();
     }
     
-    // --- [NO CHANGE] 渲染任务列表 (几乎不变) ---
     function renderTaskList() {
         taskListBody.innerHTML = '';
         const filteredAndSortedTasks = getFilteredAndSortedTasks();
@@ -303,15 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         taskListBody.appendChild(fragment);
     }
-    
-    // --- [NO CHANGE] 更新统计/紧急任务 (不变) ---
-    function updateStats() { /* ... 代码不变 ... */  let tasksToCount = tasks; const startDateStr = statsStartDateInput.value; const endDateStr = statsEndDateInput.value; if (startDateStr && endDateStr) { const rangeStart = new Date(startDateStr); rangeStart.setHours(0,0,0,0); const rangeEnd = new Date(endDateStr); rangeEnd.setHours(23,59,59,999); tasksToCount = tasks.filter(task => new Date(task.start_date) <= rangeEnd && new Date(task.end_date) >= rangeStart); } document.getElementById('stat-total').textContent = tasksToCount.length; document.getElementById('stat-completed').textContent = tasksToCount.filter(t => t.status === '已完成').length; document.getElementById('stat-pending').textContent = tasksToCount.filter(t => t.status !== '已完成').length;}
-    function updateUrgentTasks() { /* ... 代码不变 ... */ const list = document.getElementById('urgent-tasks-list'); list.innerHTML = ''; const today = new Date(); today.setHours(0,0,0,0); const reminderDeadline = new Date(); reminderDeadline.setDate(today.getDate() + URGENT_REMINDER_DAYS); const urgentTasks = tasks.filter(t => t.status !== '已完成' && t.end_date && new Date(t.end_date) >= today && new Date(t.end_date) <= reminderDeadline).sort((a,b) => new Date(a.end_date) - new Date(b.end_date)); if (urgentTasks.length === 0) { list.innerHTML = `<li style="color: var(--color-text-secondary); font-style: italic; border: none;">无紧急任务</li>`; } else { const fragment = document.createDocumentFragment(); urgentTasks.forEach(task => { const li = document.createElement('li'); li.className = `urgency-${URGENCY_LEVELS[task.urgency]?.value || 1}`; li.innerHTML = `${escapeHtml(task.name)}<small>到期: ${task.end_date}</small>`; fragment.appendChild(li); }); list.appendChild(fragment); } }
 
-    // [MODIFIED] 事件监听设置
-    // =================================================================================
     function setupEventListeners() {
-        // 主应用监听器
         document.getElementById('add-task-form').addEventListener('submit', addTask);
         searchBox.addEventListener('input', (e) => { currentFilter = e.target.value; renderTaskList(); });
         document.getElementById('sort-urgency').addEventListener('click', () => setSort('urgency'));
@@ -334,8 +306,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('save-report-btn').addEventListener('click', saveWeeklyReport);
         document.getElementById('backup-data').addEventListener('click', backupData);
         document.querySelectorAll('.modal-close').forEach(btn => btn.addEventListener('click', (e) => closeModal(e.currentTarget.dataset.target)));
-
-        // [NEW] 登出按钮
         document.getElementById('logout-btn').addEventListener('click', async () => {
             await supabase.auth.signOut();
         });
@@ -344,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setupEditModalListeners();
     }
     
-    // [NEW] 认证相关事件监听
     function setupAuthEventListeners() {
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
@@ -384,16 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
             loginForm.style.display = 'grid'; registerForm.style.display = 'none'; authError.textContent = '';
         });
     }
-    
-    // [NO CHANGE] 批量模态框监听
-    function setupBatchModalListeners() { /* ... 代码不变 ... */ const batchModal = document.getElementById('batch-modal'); document.getElementById('batch-op-btn').addEventListener('click', () => openModal('batch-modal')); batchModal.querySelector('#save-batch-btn').addEventListener('click', saveManualBatch); batchModal.querySelector('#add-batch-row').addEventListener('click', () => { const container = batchModal.querySelector('#batch-tasks-container'); const newRow = container.firstElementChild.cloneNode(true); newRow.querySelectorAll('input').forEach(i => i.value = ''); populateSelect(newRow.querySelector('.batch-urgency'), Object.keys(URGENCY_LEVELS)); container.appendChild(newRow); }); populateSelect(batchModal.querySelector('.batch-urgency'), Object.keys(URGENCY_LEVELS));}
-    
-    // [NO CHANGE] 编辑模态框监听 (但其调用的函数已被修改)
-    function setupEditModalListeners(){ /* ... 代码不变 ... */ const editModal = document.getElementById('edit-modal'); editModal.querySelector('#save-edit-btn').addEventListener('click', saveEditTask); editModal.querySelector('#add-progress-btn').addEventListener('click', addDailyProgress); editModal.querySelector('#edit-daily-progress-container').addEventListener('click', e => { const deleteBtn = e.target.closest('.delete-progress-btn'); if (deleteBtn) { const { progressId } = deleteBtn.dataset; deleteDailyProgress(document.getElementById('edit-task-id').value, progressId); } });}
 
-    // [MODIFIED] CRUD 及核心功能函数，全部改为 async
-    // =================================================================================
-    
     async function addTask(e) {
         e.preventDefault();
         const form = e.target;
@@ -445,7 +405,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const task = tasks.find(t => t.id === taskId);
         if (!task) return;
         const modal = document.getElementById('edit-modal');
-        // 先填充基本信息
         modal.querySelector('#edit-task-id').value = taskId;
         modal.querySelector('#edit-task-name').value = task.name;
         modal.querySelector('#edit-task-start-date').value = task.start_date;
@@ -454,9 +413,9 @@ document.addEventListener('DOMContentLoaded', () => {
         populateSelect(modal.querySelector('#edit-task-urgency'), Object.keys(URGENCY_LEVELS), task.urgency);
         populateSelect(modal.querySelector('#edit-task-status'), STATUS_OPTIONS, task.status);
         
-        // 异步获取并渲染每日进展
-        renderDailyProgressEditor(task.id, []); // 先清空并显示加载中...
+        renderDailyProgressEditor(task.id, []); 
         openModal('edit-modal');
+
         const { data, error } = await supabase.from('daily_progress').select('*').eq('task_id', taskId).order('created_at', { ascending: false });
         if (error) {
             alert('无法加载进展记录。');
@@ -468,12 +427,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderDailyProgressEditor(taskId, progressEntries) {
         const container = document.getElementById('edit-daily-progress-container');
-        if (progressEntries.length === 0) {
+        if (!progressEntries || progressEntries.length === 0) {
             container.innerHTML = '<p style="color: var(--color-text-secondary); font-style: italic;">无进展记录</p>';
             return;
         }
         
-        // 按日期分组
         const groupedByDate = progressEntries.reduce((acc, entry) => {
             const date = entry.progress_date;
             if (!acc[date]) acc[date] = [];
@@ -497,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dateGroup.appendChild(ul);
             fragment.appendChild(dateGroup);
         });
-        container.innerHTML = ''; // 清空
+        container.innerHTML = '';
         container.appendChild(fragment);
     }
 
@@ -561,12 +519,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!selectedWeekId) return;
         const reportContent = document.getElementById('generated-report-area').value;
 
-        // upsert = update or insert. 如果记录已存在则更新，不存在则插入
         const { error } = await supabase.from('weekly_reports').upsert({
             week_id: selectedWeekId,
             report_content: reportContent,
             user_id: currentUser.id
-        }, { onConflict: 'user_id, week_id' }); // 指定冲突的列
+        }, { onConflict: 'user_id, week_id' });
 
         if (error) {
             alert(`周报保存失败: ${error.message}`);
@@ -579,7 +536,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveManualBatch() {
         const container = document.getElementById('batch-tasks-container');
         const newTasks = [];
-        container.querySelectorAll('div').forEach(row => {
+        container.querySelectorAll('div[style]').forEach(row => {
             const name = row.querySelector('.batch-name').value.trim();
             const startDate = row.querySelector('.batch-start-date').value;
             const endDate = row.querySelector('.batch-end-date').value;
@@ -605,10 +562,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    function backupData() { const dataToBackup = { tasks, weeklyProgress }; const blob = new Blob([JSON.stringify(dataToBackup, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `TaskMaster_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); }
-    function getFilteredAndSortedTasks() { let result = [...tasks]; if (currentFilter) { const searchTerm = currentFilter.toLowerCase(); result = result.filter(task => Object.values(task).some(val => String(val).toLowerCase().includes(searchTerm))); } const { key, reverse } = currentSort; result.sort((a, b) => { let valA, valB; switch(key) { case 'urgency': valA = URGENCY_LEVELS[a.urgency]?.value || 0; valB = URGENCY_LEVELS[b.urgency]?.value || 0; break; case 'status': valA = STATUS_OPTIONS.indexOf(a.status); valB = STATUS_OPTIONS.indexOf(b.status); break; default: valA = new Date(a.created_at); valB = new Date(b.created_at); } if (valA < valB) return reverse ? 1 : -1; if (valA > valB) return reverse ? -1 : 1; return 0; }); return result; }
-    function setSort(key) { if (currentSort.key === key) { currentSort.reverse = !currentSort.reverse; } else { currentSort.key = key; currentSort.reverse = (key === 'urgency'); } updateSortButtons(); renderTaskList(); }
-    function updateSortButtons() { document.querySelectorAll('.sidebar-section button[id^="sort-"]').forEach(btn => { btn.classList.remove('btn-primary'); let baseText = {'sort-urgency':'按重要程度','sort-status':'按任务状态'}[btn.id]; const key = btn.id.replace('sort-', ''); if(currentSort.key === key) { btn.classList.add('btn-primary'); btn.textContent = `${baseText} ${currentSort.reverse ? '▼' : '▲'}`; } else { btn.textContent = baseText; } }); }
     function populateSelect(select, options, selectedValue = null) { select.innerHTML = options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === selectedValue ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join(''); }
     function escapeHtml(str) { return String(str || '').replace(/[&<>"']/g, m => ({'&':'&','<':'<','>':'>','"':'"',"'":'''})[m]); }
     function openModal(id) { document.getElementById(id)?.classList.add('active'); }
@@ -616,9 +569,215 @@ document.addEventListener('DOMContentLoaded', () => {
     function getWeekIdFromDate(d) { const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); date.setUTCDate(date.getUTCDate() + 4 - (date.getUTCDay() || 7)); const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1)); const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7); return `${date.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`; }
     function getWeekStartEndDates(weekId) { const [year, week] = weekId.split('-W').map(Number); const d = new Date(Date.UTC(year, 0, 1 + (week - 1) * 7)); const day = d.getUTCDay() || 7; d.setUTCDate(d.getUTCDate() + 1 - day); return [new Date(d), new Date(d.setUTCDate(d.getUTCDate() + 6))]; }
     function formatDate(date, full = false) { return date.toLocaleDateString('zh-CN', { year: full?'numeric':undefined, month: '2-digit', day: '2-digit' }).replace(/\//g, '-'); }
-    function populateWeekSelector() { const weekIds = new Set(); tasks.forEach(task => { if (task.start_date) weekIds.add(getWeekIdFromDate(new Date(task.start_date))); if (task.end_date) weekIds.add(getWeekIdFromDate(new Date(task.end_date))); Object.keys(task.daily_progress || {}).forEach(dateStr => weekIds.add(getWeekIdFromDate(new Date(dateStr)))); }); Object.keys(weeklyProgress).forEach(weekId => weekIds.add(weekId)); weekIds.add(getWeekIdFromDate(new Date())); const sortedWeeks = Array.from(weekIds).sort().reverse(); const selector = document.getElementById('week-selector'); selector.innerHTML = sortedWeeks.map(weekId => { const [start, end] = getWeekStartEndDates(weekId); return `<option value="${weekId}">${weekId} (${formatDate(start)} - ${formatDate(end)})</option>`; }).join(''); const currentWeekId = getWeekIdFromDate(new Date()); if(sortedWeeks.includes(currentWeekId)) selector.value = currentWeekId; }
-    function loadSelectedWeekData() { const selectedWeekId = document.getElementById('week-selector').value; if (!selectedWeekId) return; const [weekStart, weekEnd] = getWeekStartEndDates(selectedWeekId); const relevantTasks = tasks.filter(task => new Date(task.start_date) <= weekEnd && new Date(task.end_date) >= weekStart); document.getElementById('weekly-plan-display').innerHTML = relevantTasks.length > 0 ? '<ul>' + relevantTasks.map(t => `<li><strong>${escapeHtml(t.name)}</strong><br><small>${t.status} | ${t.urgency}</small></li>`).join('') + '</ul>' : '<p style="color: var(--color-text-secondary);">本周无相关计划任务。</p>'; document.getElementById('generated-report-area').value = weeklyProgress[selectedWeekId]?.generated_report || ''; }
-    function generateWeeklyReport() { const selectedWeekId = document.getElementById('week-selector').value; if (!selectedWeekId) return; const [weekStart, weekEnd] = getWeekStartEndDates(selectedWeekId); let reportText = `## 周报 (${selectedWeekId})\n周期: ${formatDate(weekStart, true)} 至 ${formatDate(weekEnd, true)}\n\n--- 本周任务进展与记录 ---\n\n`; const tasksWithActivity = tasks.filter(task => (new Date(task.start_date) <= weekEnd && new Date(task.end_date) >= weekStart)); if (tasksWithActivity.length === 0) { reportText += "本周没有相关任务。\n"; } else { tasksWithActivity.forEach(task => { reportText += `### 任务: ${task.name} (${task.status}, ${task.urgency})\n`; const progressInWeek = (task.daily_progress || []).filter(p => new Date(p.progress_date) >= weekStart && new Date(p.progress_date) <= weekEnd); if (progressInWeek.length > 0) { progressInWeek.sort((a,b) => new Date(a.progress_date) - new Date(b.progress_date)).forEach(entry => { reportText += `  - ${entry.progress_date}: ${entry.content}\n`; }); } else { reportText += `  - 本周无明确进展记录。\n`; } if (task.status === '已完成' && new Date(task.end_date) >= weekStart && new Date(task.end_date) <= weekEnd) { reportText += `  - 任务于 ${task.end_date} 完成。\n`; } reportText += "\n"; }); } document.getElementById('generated-report-area').value = reportText; }
+    
+    // --- [CORRECTED] Multi-line, readable functions ---
+    function updateStats() {
+        let tasksToCount = tasks;
+        const startDateStr = statsStartDateInput.value;
+        const endDateStr = statsEndDateInput.value;
+        if (startDateStr && endDateStr) {
+            const rangeStart = new Date(startDateStr); rangeStart.setHours(0,0,0,0);
+            const rangeEnd = new Date(endDateStr); rangeEnd.setHours(23,59,59,999);
+            tasksToCount = tasks.filter(task => new Date(task.start_date) <= rangeEnd && new Date(task.end_date) >= rangeStart);
+        }
+        document.getElementById('stat-total').textContent = tasksToCount.length;
+        document.getElementById('stat-completed').textContent = tasksToCount.filter(t => t.status === '已完成').length;
+        document.getElementById('stat-pending').textContent = tasksToCount.filter(t => t.status !== '已完成').length;
+    }
+
+    function updateUrgentTasks() {
+        const list = document.getElementById('urgent-tasks-list');
+        list.innerHTML = '';
+        const today = new Date(); today.setHours(0,0,0,0);
+        const reminderDeadline = new Date(); reminderDeadline.setDate(today.getDate() + URGENT_REMINDER_DAYS);
+        const urgentTasks = tasks
+            .filter(t => t.status !== '已完成' && t.end_date && new Date(t.end_date) >= today && new Date(t.end_date) <= reminderDeadline)
+            .sort((a,b) => new Date(a.end_date) - new Date(b.end_date));
+        
+        if (urgentTasks.length === 0) {
+            list.innerHTML = `<li style="color: var(--color-text-secondary); font-style: italic; border: none;">无紧急任务</li>`;
+        } else {
+            const fragment = document.createDocumentFragment();
+            urgentTasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `urgency-${URGENCY_LEVELS[task.urgency]?.value || 1}`;
+                li.innerHTML = `${escapeHtml(task.name)}<small>到期: ${task.end_date}</small>`;
+                fragment.appendChild(li);
+            });
+            list.appendChild(fragment);
+        }
+    }
+
+    function setupBatchModalListeners() {
+        const batchModal = document.getElementById('batch-modal');
+        document.getElementById('batch-op-btn').addEventListener('click', () => openModal('batch-modal'));
+        batchModal.querySelector('#save-batch-btn').addEventListener('click', saveManualBatch);
+        batchModal.querySelector('#add-batch-row').addEventListener('click', () => {
+            const container = batchModal.querySelector('#batch-tasks-container');
+            const newRow = container.firstElementChild.cloneNode(true);
+            newRow.querySelectorAll('input').forEach(i => i.value = '');
+            populateSelect(newRow.querySelector('.batch-urgency'), Object.keys(URGENCY_LEVELS));
+            container.appendChild(newRow);
+        });
+        populateSelect(batchModal.querySelector('.batch-urgency'), Object.keys(URGENCY_LEVELS));
+    }
+
+    function setupEditModalListeners(){
+        const editModal = document.getElementById('edit-modal');
+        editModal.querySelector('#save-edit-btn').addEventListener('click', saveEditTask);
+        editModal.querySelector('#add-progress-btn').addEventListener('click', addDailyProgress);
+        editModal.querySelector('#edit-daily-progress-container').addEventListener('click', e => {
+            const deleteBtn = e.target.closest('.delete-progress-btn');
+            if (deleteBtn) {
+                const { progressId } = deleteBtn.dataset;
+                deleteDailyProgress(document.getElementById('edit-task-id').value, progressId);
+            }
+        });
+    }
+
+    function backupData() {
+        const dataToBackup = { tasks, weeklyProgress };
+        const blob = new Blob([JSON.stringify(dataToBackup, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `TaskMaster_Backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function getFilteredAndSortedTasks() {
+        let result = [...tasks];
+        if (currentFilter) {
+            const searchTerm = currentFilter.toLowerCase();
+            result = result.filter(task =>
+                Object.values(task).some(val => String(val).toLowerCase().includes(searchTerm))
+            );
+        }
+
+        const { key, reverse } = currentSort;
+        result.sort((a, b) => {
+            let valA, valB;
+            switch(key) {
+                case 'urgency':
+                    valA = URGENCY_LEVELS[a.urgency]?.value || 0;
+                    valB = URGENCY_LEVELS[b.urgency]?.value || 0;
+                    break;
+                case 'status':
+                    valA = STATUS_OPTIONS.indexOf(a.status);
+                    valB = STATUS_OPTIONS.indexOf(b.status);
+                    break;
+                default:
+                    valA = new Date(a.created_at);
+                    valB = new Date(b.created_at);
+                    break;
+            }
+            if (valA < valB) return reverse ? 1 : -1;
+            if (valA > valB) return reverse ? -1 : 1;
+            return 0;
+        });
+        return result;
+    }
+
+    function setSort(key) {
+        if (currentSort.key === key) {
+            currentSort.reverse = !currentSort.reverse;
+        } else {
+            currentSort.key = key;
+            currentSort.reverse = (key === 'urgency');
+        }
+        updateSortButtons();
+        renderTaskList();
+    }
+
+    function updateSortButtons() {
+        document.querySelectorAll('.sidebar-section button[id^="sort-"]').forEach(btn => {
+            btn.classList.remove('btn-primary');
+            let baseText = {'sort-urgency':'按重要程度','sort-status':'按任务状态'}[btn.id];
+            const key = btn.id.replace('sort-', '');
+            if(currentSort.key === key) {
+                btn.classList.add('btn-primary');
+                btn.textContent = `${baseText} ${currentSort.reverse ? '▼' : '▲'}`;
+            } else {
+                btn.textContent = baseText;
+            }
+        });
+    }
+    
+    function populateWeekSelector() {
+        const weekIds = new Set();
+        tasks.forEach(task => {
+            if (task.start_date) weekIds.add(getWeekIdFromDate(new Date(task.start_date)));
+            if (task.end_date) weekIds.add(getWeekIdFromDate(new Date(task.end_date)));
+        });
+        Object.keys(weeklyProgress).forEach(weekId => weekIds.add(weekId));
+        weekIds.add(getWeekIdFromDate(new Date()));
+
+        const sortedWeeks = Array.from(weekIds).sort().reverse();
+        const selector = document.getElementById('week-selector');
+        selector.innerHTML = sortedWeeks.map(weekId => {
+            const [start, end] = getWeekStartEndDates(weekId);
+            return `<option value="${weekId}">${weekId} (${formatDate(start)} - ${formatDate(end)})</option>`;
+        }).join('');
+        
+        const currentWeekId = getWeekIdFromDate(new Date());
+        if(sortedWeeks.includes(currentWeekId)) {
+            selector.value = currentWeekId;
+        }
+    }
+
+    function loadSelectedWeekData() {
+        const selectedWeekId = document.getElementById('week-selector').value;
+        if (!selectedWeekId) return;
+        
+        const [weekStart, weekEnd] = getWeekStartEndDates(selectedWeekId);
+        const relevantTasks = tasks.filter(task => new Date(task.start_date) <= weekEnd && new Date(task.end_date) >= weekStart);
+        
+        document.getElementById('weekly-plan-display').innerHTML = relevantTasks.length > 0 ?
+            '<ul>' + relevantTasks.map(t => `<li><strong>${escapeHtml(t.name)}</strong><br><small>${t.status} | ${t.urgency}</small></li>`).join('') + '</ul>' :
+            '<p style="color: var(--color-text-secondary);">本周无相关计划任务。</p>';
+        
+        document.getElementById('generated-report-area').value = weeklyProgress[selectedWeekId]?.generated_report || '';
+    }
+
+    function generateWeeklyReport() {
+        const selectedWeekId = document.getElementById('week-selector').value;
+        if (!selectedWeekId) return;
+
+        const [weekStart, weekEnd] = getWeekStartEndDates(selectedWeekId);
+        let reportText = `## 周报 (${selectedWeekId})\n周期: ${formatDate(weekStart, true)} 至 ${formatDate(weekEnd, true)}\n\n--- 本周任务进展与记录 ---\n\n`;
+        const tasksWithActivity = tasks.filter(task => new Date(task.start_date) <= weekEnd && new Date(task.end_date) >= weekStart);
+
+        if (tasksWithActivity.length === 0) {
+            reportText += "本周没有相关任务。\n";
+        } else {
+            tasksWithActivity.forEach(async task => {
+                reportText += `### 任务: ${task.name} (${task.status}, ${task.urgency})\n`;
+                
+                // 确保进展已加载
+                if (!task.daily_progress || Object.keys(task.daily_progress).length === 0) {
+                    const { data } = await supabase.from('daily_progress').select('*').eq('task_id', task.id);
+                    task.daily_progress = data || [];
+                }
+
+                const progressInWeek = (task.daily_progress || []).filter(p => new Date(p.progress_date) >= weekStart && new Date(p.progress_date) <= weekEnd);
+                
+                if (progressInWeek.length > 0) {
+                    progressInWeek.sort((a,b) => new Date(a.progress_date) - new Date(b.progress_date)).forEach(entry => {
+                        reportText += `  - ${entry.progress_date}: ${entry.content}\n`;
+                    });
+                } else {
+                    reportText += `  - 本周无明确进展记录。\n`;
+                }
+
+                if (task.status === '已完成' && new Date(task.end_date) >= weekStart && new Date(task.end_date) <= weekEnd) {
+                    reportText += `  - 任务于 ${task.end_date} 完成。\n`;
+                }
+                reportText += "\n";
+            });
+        }
+        document.getElementById('generated-report-area').value = reportText;
+    }
 
     // 初始化认证监听
     setupAuthEventListeners();
