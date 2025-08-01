@@ -222,10 +222,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const SUPABASE_URL = 'https://oprqecajnzvzusjqqolk.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wcnFlY2Fqbnp2enVzanFxb2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMTQzMzMsImV4cCI6MjA2OTU5MDMzM30.lY691Yw7u6ipUxXW6inYAnkv-ohJT96OWTAU-usMJOw';
     
-    // --- **FIXED**: Supabase 客户端初始化 ---
-    // 从全局的 supabase 对象中解构出 createClient 函数
-    const { createClient } = supabase;
-    // 使用新的变量名 `supabaseClient` 来存储客户端实例，避免命名冲突
+    // --- **FINAL FIX**: 显式地从 window 对象获取 supabase 库 ---
+    const { createClient } = window.supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // --- 全局变量 ---
@@ -250,11 +248,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const statsEndDateInput = document.getElementById('stats-end-date');
 
     // --- 核心流程 ---
-    
-    // 检查认证状态并相应地更新UI
     const handleAuthFlow = async (session) => {
         currentUser = session?.user || null;
-
         appLoadingDiv.style.display = 'none';
         if (currentUser) {
             authContainer.style.display = 'none';
@@ -266,12 +261,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else {
             isAppInitialized = false;
+            tasks = [];
+            weeklyProgress = {};
             appContainer.style.display = 'none';
             authContainer.style.display = 'block';
         }
     };
     
-    // 初始化应用（仅在用户登录后执行一次）
     async function initializeApp() {
         setupEventListeners();
         populateSelect(document.getElementById('task-urgency'), Object.keys(URGENCY_LEVELS));
@@ -281,33 +277,24 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('task-end-date').valueAsDate = today;
         statsStartDateInput.valueAsDate = firstDayOfMonth;
         statsEndDateInput.valueAsDate = today;
-        
         await loadData();
         render();
     }
     
-    // 从 Supabase 加载用户数据
     async function loadData() {
         if (!currentUser) return;
         try {
             const { data: taskData, error: taskError } = await supabaseClient.from('tasks').select('*').order('created_at', { ascending: false });
             if (taskError) throw taskError;
             tasks = taskData || [];
-            
             const { data: progressData, error: progressError } = await supabaseClient.from('weekly_progress').select('*');
             if (progressError) throw progressError;
-            weeklyProgress = (progressData || []).reduce((acc, item) => {
-                acc[item.week_id] = item; return acc;
-            }, {});
-            
+            weeklyProgress = (progressData || []).reduce((acc, item) => { acc[item.week_id] = item; return acc; }, {});
             tasks.forEach(task => { task.daily_progress = task.daily_progress || {}; });
-        } catch (error) {
-            console.error('Error loading data:', error);
-            alert('数据加载失败: ' + error.message);
-        }
+        } catch (error) { console.error('Error loading data:', error); alert('数据加载失败: ' + error.message); }
     }
     
-    // --- 渲染函数 (与之前版本相同, 此处省略重复代码以保持清晰) ---
+    // --- 渲染与辅助函数 (为了简洁，未修改的部分在此处折叠) ---
     function render() { renderTaskList(); updateStats(); updateUrgentTasks(); populateWeekSelector(); loadSelectedWeekData(); }
     function renderTaskList() {
         taskListBody.innerHTML = '';
@@ -341,7 +328,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const urgentTasks = tasks.filter(t => t.status !== '已完成' && t.end_date && new Date(t.end_date) >= today && new Date(t.end_date) <= reminderDeadline).sort((a,b) => new Date(a.end_date) - new Date(b.end_date));
         if (urgentTasks.length === 0) { list.innerHTML = `<li style="color: var(--color-text-secondary); font-style: italic; border: none;">无紧急任务</li>`; } else { const fragment = document.createDocumentFragment(); urgentTasks.forEach(task => { const li = document.createElement('li'); li.className = `urgency-${URGENCY_LEVELS[task.urgency]?.value || 1}`; li.innerHTML = `${escapeHtml(task.name)}<small>到期: ${task.end_date}</small>`; fragment.appendChild(li); }); list.appendChild(fragment); }
     }
-    // ... [其他渲染函数无需修改] ...
 
     // --- 事件监听设置 ---
     function setupEventListeners() {
@@ -373,12 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const name = form.querySelector('#task-name').value.trim(); const start_date = form.querySelector('#task-start-date').value; const end_date = form.querySelector('#task-end-date').value; const urgency = form.querySelector('#task-urgency').value;
         if (!name || !start_date || !end_date || !urgency) return alert('请填写所有必填项！');
         if (new Date(end_date) < new Date(start_date)) return alert('结束日期不能早于开始日期！');
-        
-        try {
-            const { data, error } = await supabaseClient.from('tasks').insert({ name, start_date, end_date, urgency, status: '待办' }).select().single();
-            if (error) throw error;
-            tasks.unshift(data); render();
-            form.reset(); form.querySelector('#task-start-date').valueAsDate = new Date(); form.querySelector('#task-end-date').valueAsDate = new Date();
+        try { const { data, error } = await supabaseClient.from('tasks').insert({ name, start_date, end_date, urgency, status: '待办' }).select().single(); if (error) throw error; tasks.unshift(data); render(); form.reset(); form.querySelector('#task-start-date').valueAsDate = new Date(); form.querySelector('#task-end-date').valueAsDate = new Date();
         } catch (error) { console.error('Error adding task:', error); alert('添加任务失败: ' + error.message); }
     }
     function getFilteredAndSortedTasks() {
@@ -391,22 +372,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function setSort(key) { if (currentSort.key === key) { currentSort.reverse = !currentSort.reverse; } else { currentSort.key = key; currentSort.reverse = (key === 'urgency' || key === 'created_at'); } updateSortButtons(); renderTaskList(); }
     function updateSortButtons() { document.querySelectorAll('.sidebar-section button[id^="sort-"]').forEach(btn => { btn.classList.remove('btn-primary'); let baseText = {'sort-urgency':'按重要程度','sort-status':'按任务状态'}[btn.id]; const key = btn.id.replace('sort-', ''); if(currentSort.key === key) { btn.classList.add('btn-primary'); btn.textContent = `${baseText} ${currentSort.reverse ? '▼' : '▲'}`; } else { btn.textContent = baseText; } }); }
     async function updateTask(id, updates) {
-        try {
-            const { data, error } = await supabaseClient.from('tasks').update(updates).eq('id', id).select().single();
-            if (error) throw error;
-            const index = tasks.findIndex(t => t.id === id);
-            if (index !== -1) tasks[index] = { ...tasks[index], ...data };
-            render();
+        try { const { data, error } = await supabaseClient.from('tasks').update(updates).eq('id', id).select().single(); if (error) throw error; const index = tasks.findIndex(t => t.id === id); if (index !== -1) tasks[index] = { ...tasks[index], ...data }; render();
         } catch (error) { console.error('Error updating task:', error); alert('更新任务失败: ' + error.message); }
     }
     async function deleteTask(id) {
-        if (confirm('确定要删除这个任务吗？此操作不可逆！')) {
-            try {
-                const { error } = await supabaseClient.from('tasks').delete().eq('id', id);
-                if (error) throw error;
-                tasks = tasks.filter(t => t.id !== id); render();
-            } catch (error) { console.error('Error deleting task:', error); alert('删除任务失败: ' + error.message); }
-        }
+        if (confirm('确定要删除这个任务吗？此操作不可逆！')) { try { const { error } = await supabaseClient.from('tasks').delete().eq('id', id); if (error) throw error; tasks = tasks.filter(t => t.id !== id); render(); } catch (error) { console.error('Error deleting task:', error); alert('删除任务失败: ' + error.message); } }
     }
     function populateSelect(select, options, selectedValue = null) { select.innerHTML = options.map(opt => `<option value="${escapeHtml(opt)}" ${opt === selectedValue ? 'selected' : ''}>${escapeHtml(opt)}</option>`).join(''); }
     function escapeHtml(str) { return String(str || '').replace(/[&<>"']/g, m => ({'&':'&','<':'<','>':'>','"':'"',"'":'''})[m]); }
@@ -421,10 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveWeeklyReport() {
         const selectedWeekId = document.getElementById('week-selector').value; if (!selectedWeekId) return;
         const reportData = { week_id: selectedWeekId, generated_report: document.getElementById('generated-report-area').value };
-        try {
-            const { data, error } = await supabaseClient.from('weekly_progress').upsert(reportData, { onConflict: 'week_id' }).select().single(); // user_id is implicit
-            if (error) throw error;
-            weeklyProgress[selectedWeekId] = data; alert('周报已保存到云端！');
+        try { const { data, error } = await supabaseClient.from('weekly_progress').upsert(reportData, { onConflict: 'week_id' }).select().single(); if (error) throw error; weeklyProgress[selectedWeekId] = data; alert('周报已保存到云端！');
         } catch (error) { console.error('Error saving weekly report:', error); alert('保存周报失败: ' + error.message); }
     }
     function backupData() { const dataToBackup = { tasks, weeklyProgress }; const blob = new Blob([JSON.stringify(dataToBackup, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `TaskMaster_Backup_${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url); }
@@ -445,15 +412,10 @@ document.addEventListener('DOMContentLoaded', () => {
         loginForm.style.display = isLoginVisible ? 'none' : 'flex'; signupForm.style.display = isLoginVisible ? 'flex' : 'none';
         toggleButton.textContent = isLoginVisible ? '已有账户？点此登录' : '还没有账户？点此注册'; authMessage.textContent = '';
     });
-    document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('auth-email').value; const password = document.getElementById('auth-password').value; const { error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) authMessage.textContent = '登录失败: ' + error.message; else authMessage.textContent = ''; });
-    document.getElementById('signup-form').addEventListener('submit', async (e) => { e.preventDefault(); const email = document.getElementById('signup-email').value; const password = document.getElementById('signup-password').value; const { data, error } = await supabaseClient.auth.signUp({ email, password }); if (error) { authMessage.textContent = '注册失败: ' + error.message; } else if (data.user && data.user.identities && data.user.identities.length === 0) { authMessage.textContent = '注册失败: 该邮箱可能已被注册。'; } else { authMessage.textContent = '注册成功！请检查您的邮箱以完成验证，然后返回登录。'; } });
+    document.getElementById('login-form').addEventListener('submit', async (e) => { e.preventDefault(); authMessage.textContent = '登录中...'; const email = document.getElementById('auth-email').value; const password = document.getElementById('auth-password').value; const { error } = await supabaseClient.auth.signInWithPassword({ email, password }); if (error) authMessage.textContent = '登录失败: ' + error.message; else authMessage.textContent = ''; });
+    document.getElementById('signup-form').addEventListener('submit', async (e) => { e.preventDefault(); authMessage.textContent = '处理中...'; const email = document.getElementById('signup-email').value; const password = document.getElementById('signup-password').value; const { data, error } = await supabaseClient.auth.signUp({ email, password }); if (error) { authMessage.textContent = '注册失败: ' + error.message; } else if (data.user && data.user.identities && data.user.identities.length === 0) { authMessage.textContent = '注册失败: 该邮箱可能已被注册。'; } else { authMessage.textContent = '注册成功！请检查您的邮箱以完成验证，然后返回登录。'; } });
 
     // --- 应用启动入口 ---
-    // 首次加载时检查会话
-    supabaseClient.auth.getSession().then(({ data: { session } }) => {
-        handleAuthFlow(session);
-    });
-    // 监听后续认证状态变化（登录、登出）
     supabaseClient.auth.onAuthStateChange((_event, session) => {
         handleAuthFlow(session);
     });
