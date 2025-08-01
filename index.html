@@ -1,80 +1,66 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Supabase 任务管理</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* 基础样式，可替换为 TaskMaster 主题 */
     :root { --primary: #00999F; --primary-dark: #007f85; --accent: #FEEE30; --bg: #f8f9fa; --surface: #fff; --border: #e9ecef; --text: #065758; --shadow: 0 4px 15px rgba(6,87,88,0.1); --radius:8px; }
     * { box-sizing: border-box; margin:0; padding:0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); }
-    .container { max-width: 1200px; margin: 20px auto; padding: 20px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .container { max-width:1200px; margin:20px auto; padding:20px; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow);}    
     .hidden { display:none; }
-    h2 { margin-bottom: 1rem; }
-    input, select, button, textarea { padding:0.6rem; border:1px solid var(--border); border-radius:var(--radius); font-size:0.9rem; }
-    button { background: var(--primary); color: #fff; cursor: pointer; }
-    button:hover { background: var(--primary-dark); }
-    table { width:100%; border-collapse: separate; border-spacing:0 0.5rem; }
-    th, td { padding:0.8rem 1rem; background: var(--surface); }
-    th { background: var(--bg); color: var(--text); font-weight:600; }
-    .inline-edit { background:transparent; border:none; cursor:pointer; }
-    .badge { padding:2px 8px; border-radius:16px; font-size:0.75rem; }
-    .badge-urgency-4 { background: var(--accent); color: var(--text); }
-    .badge-urgency-3 { background: rgba(0,153,159,0.15); color: var(--primary-dark); }
-    .badge-urgency-2 { background: rgba(129,210,227,0.25); color:#0f6270; }
-    .badge-urgency-1 { background: var(--border); color:#6c757d; }
-    .badge-status-已完成 { background:#e6f5f5; color:#006970; }
-    .badge-status-进行中 { background:var(--primary); color:#fff; }
-    .badge-status-已暂停 { background:var(--border); color:#6c757d; }
-    .badge-status-待办 { background:#f1f3f5; color:#495057; }
-    .sidebar, .main { background:var(--surface); border-radius:var(--radius); padding:1rem; box-shadow:var(--shadow); }
+    input, select, textarea, button { margin:5px 0; padding:0.6rem; border:1px solid var(--border); border-radius:var(--radius); font-size:0.9rem; }
+    button { background:var(--primary); color:#fff; cursor:pointer; }
+    button:hover { background:var(--primary-dark); }
     .app { display:flex; gap:1rem; }
     .sidebar { flex:0 0 250px; display:flex; flex-direction:column; gap:1rem; }
-    .sidebar section { }
+    .sidebar section { background:var(--surface); padding:1rem; border-radius:var(--radius); box-shadow:var(--shadow); }
     .main { flex:1; display:flex; flex-direction:column; }
     .tabs { display:flex; border-bottom:1px solid var(--border); }
     .tab-btn { flex:1; padding:0.8rem; background:transparent; border:none; cursor:pointer; }
     .tab-btn.active { border-bottom:3px solid var(--primary); color:var(--primary); }
-    .tab-content { flex:1; overflow:auto; padding:1rem; }
-    .modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; justify-content:center; align-items:center; visibility:hidden; }
-    .modal.active { visibility:visible; }
-    .modal .content { background:var(--surface); padding:1.5rem; border-radius:var(--radius); max-width:600px; width:100%; max-height:90vh; overflow:auto; }
-    .modal header { display:flex; justify-content:space-between; align-items:center; }
+    .tab-content { flex:1; overflow:auto; padding:1rem; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); }
+    table { width:100%; border-collapse: separate; border-spacing:0 0.5rem; }
+    th, td { padding:0.8rem 1rem; background:var(--surface); }
+    th { background:var(--bg); font-weight:600; }
+    .modal { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; display:none; }
+    .modal.active { display:flex; }
+    .modal .content { background:var(--surface); padding:1.5rem; border-radius:var(--radius); max-width:600px; width:100%; max-height:90vh; overflow:auto; box-shadow:var(--shadow); }
   </style>
 </head>
 <body>
 <div class="container">
-  <!-- 登录注册 -->
-  <div id="login" class="container">
+  <!-- 登录 -->
+  <div id="login">
     <h2>登录 / 注册</h2>
-    <input id="email" type="email" placeholder="邮箱" /><br/>
-    <input id="password" type="password" placeholder="密码" /><br/>
+    <input id="email" type="email" placeholder="邮箱"><br>
+    <input id="password" type="password" placeholder="密码"><br>
     <button id="btn-signup">注册</button>
     <button id="btn-login">登录</button>
     <button id="btn-github">GitHub 登录</button>
     <p id="login-msg" style="color:red;"></p>
   </div>
-  <!-- 主应用 -->
+  <!-- 应用 -->
   <div id="app" class="hidden app">
-    <aside class="sidebar">
+    <div class="sidebar">
       <section>
-        <input id="search-box" placeholder="🔍 搜索任务..." />
+        <input id="search-box" placeholder="🔍 搜索任务...">
       </section>
       <section>
         <h3>排序</h3>
-        <button id="sort-urgency" class="btn">按重要程度</button>
-        <button id="sort-status" class="btn">按状态</button>
-        <button id="clear-filter" class="btn">清除</button>
+        <button id="sort-urgency">按重要度</button>
+        <button id="sort-status">按状态</button>
+        <button id="clear-filter">清除</button>
       </section>
       <section>
         <h3>统计</h3>
-        <label>开始:</label><input id="stats-start-date" type="date" /><br/>
-        <label>结束:</label><input id="stats-end-date" type="date" />
-        <div><strong>总:</strong><span id="stat-total">0</span></div>
-        <div><strong>完成:</strong><span id="stat-completed">0</span></div>
-        <div><strong>未完:</strong><span id="stat-pending">0</span></div>
+        <label>开始:</label><input id="stats-start-date" type="date"><br>
+        <label>结束:</label><input id="stats-end-date" type="date">
+        <div>总: <span id="stat-total">0</span></div>
+        <div>完成: <span id="stat-completed">0</span></div>
+        <div>未完: <span id="stat-pending">0</span></div>
       </section>
       <section>
         <h3>紧急任务 (2天内)</h3>
@@ -83,22 +69,22 @@
       <section>
         <button id="backup-data">本地备份</button>
       </section>
-    </aside>
-    <main class="main">
-      <nav class="tabs">
+    </div>
+    <div class="main">
+      <div class="tabs">
         <button data-tab="tasks" class="tab-btn active">任务列表</button>
         <button data-tab="progress" class="tab-btn">每周进展</button>
-      </nav>
+      </div>
       <div id="tab-tasks" class="tab-content">
-        <form id="add-task-form" style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-          <input id="task-name" placeholder="任务名称" required />
-          <input id="task-start" type="date" required />
-          <input id="task-end" type="date" required />
+        <form id="add-task-form" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          <input id="task-name" placeholder="任务名称" required>
+          <input id="task-start" type="date" required>
+          <input id="task-end" type="date" required>
           <select id="task-urgency" required>
             <option>非常重要紧急</option><option>重要不紧急</option><option>紧急不重要</option><option>不重要不紧急</option>
           </select>
           <button type="submit">添加</button>
-          <button type="button" id="batch-op-btn">批量添加</button>
+          <button type="button" id="batch-op-btn">批量</button>
         </form>
         <table>
           <thead><tr><th>#</th><th>名称</th><th>起止</th><th>重要度</th><th>状态</th><th>操作</th></tr></thead>
@@ -106,26 +92,26 @@
         </table>
       </div>
       <div id="tab-progress" class="tab-content hidden">
-        <div style="display:flex;gap:0.5rem;align-items:center;">
-          <label>周:</label><select id="week-selector" style="flex:1;"></select>
-          <button id="generate-report-btn">刷新周报</button>
-          <button id="save-report-btn">保存周报</button>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <label>周:</label><select id="week-selector"></select>
+          <button id="generate-report-btn">刷新</button>
+          <button id="save-report-btn">保存</button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
           <section><h3>本周任务</h3><div id="weekly-plan-display"></div></section>
-          <section><h3>周报总结</h3><textarea id="generated-report-area" style="width:100%;height:100%;"></textarea></section>
+          <section><h3>周报</h3><textarea id="generated-report-area" style="width:100%; height:100%;"></textarea></section>
         </div>
       </div>
-    </main>
+    </div>
   </div>
 </div>
 
-<!-- 模态：批量 -->
+<!-- 批量模态 -->
 <div id="batch-modal" class="modal">
   <div class="content">
     <header><h3>批量添加</h3><button onclick="closeModal('batch-modal')">×</button></header>
     <div id="batch-tasks-container"></div>
-    <button id="add-batch-row">+ 行</button>
+    <button id="add-batch-row">添加行</button>
     <button id="save-batch-btn">保存</button>
   </div>
 </div>
@@ -133,76 +119,59 @@
 <div id="edit-modal" class="modal">
   <div class="content">
     <header><h3>编辑任务</h3><button onclick="closeModal('edit-modal')">×</button></header>
-    <div><input type="hidden" id="edit-task-id"/></div>
-    <div><input id="edit-task-name"/><select id="edit-task-urgency"></select><input id="edit-task-start-date" type="date"/><input id="edit-task-end-date" type="date"/><select id="edit-task-status"></select></div>
-    <div><textarea id="edit-task-notes" placeholder="备注"></textarea></div>
-    <div><h4>新增进展</h4><input id="new-progress-content"/><button id="add-progress-btn">添加</button></div>
+    <input type="hidden" id="edit-task-id">
+    <input id="edit-task-name" placeholder="名称"><br>
+    <select id="edit-task-urgency"></select>
+    <input id="edit-task-start-date" type="date">
+    <input id="edit-task-end-date" type="date"><br>
+    <select id="edit-task-status"></select><br>
+    <textarea id="edit-task-notes" placeholder="备注"></textarea>
+    <h4>新增进展</h4>
+    <input id="new-progress-content" placeholder="进展内容"><button id="add-progress-btn">添加</button>
     <div id="edit-daily-progress-container"></div>
     <button id="save-edit-btn">保存</button>
   </div>
 </div>
 
 <script>
-  // Supabase init
-  const SUPABASE_URL='https://oprqecajnzvzusjqqolk.supabase.co';
-  const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wcnFlY2Fqbnp2enVzanFxb2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMTQzMzMsImV4cCI6MjA2OTU5MDMzM30.lY691Yw7u6ipUxXW6inYAnkv-ohJT96OWTAU-usMJOw';
-  const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  // 常量
-  const URGENCY_LEVELS={"非常重要紧急":4,"重要不紧急":3,"紧急不重要":2,"不重要不紧急":1};
-  const STATUS_OPTIONS=["待办","进行中","已暂停","已完成"];
-  const URGENT_DAYS=2;
-  let tasks=[],weeklyProgress={},currentSort={key:'createdAt',reverse:false},currentFilter='';
-
-  // DOM 缓存
-  const loginEl=document.getElementById('login'),appEl=document.getElementById('app'),msgEl=document.getElementById('login-msg');
-  const taskListBody=document.getElementById('task-list-body'),searchBox=document.getElementById('search-box');
-  const statsStartDateInput=document.getElementById('stats-start-date'),statsEndDateInput=document.getElementById('stats-end-date');
-
-  // 认证
-  document.getElementById('btn-signup').onclick=async()=>{const e=document.getElementById('email').value,p=document.getElementById('password').value;let{error}=await supabase.auth.signUp({email:e,password:p});msgEl.textContent=error?error.message:'注册成功';};
-  document.getElementById('btn-login').onclick=async()=>{const e=document.getElementById('email').value,p=document.getElementById('password').value;let{error}=await supabase.auth.signInWithPassword({email:e,password:p});msgEl.textContent=error?error.message:'';};
-  document.getElementById('btn-github').onclick=()=>supabase.auth.signInWithOAuth({provider:'github'});
-  document.getElementById('btn-logout').onclick=async()=>{await supabase.auth.signOut();showLogin();};
-  supabase.auth.onAuthStateChange((_,session)=>{session?.user?showApp():showLogin();});
-  function showLogin(){loginEl.classList.remove('hidden');appEl.classList.add('hidden');msgEl.textContent='';}
-  async function showApp(){loginEl.classList.add('hidden');appEl.classList.remove('hidden');await initialize();}
-
-  // 初始化
-  async function initialize(){await loadData();setupListeners();render();}
-  async function loadData(){const{data:user}=await supabase.auth.getUser();tasks=(await supabase.from('tasks').select('*').eq('user_id',user.id)).data||[];weeklyProgress=(await supabase.from('progress').select('*')).data.reduce((acc,p)=>{acc[getWeekIdFromDate(new Date(p.date))]=acc[getWeekIdFromDate(new Date(p.date))]||{generated_report:''};return acc;},{});}  
-
-  function setupListeners(){
-    document.getElementById('add-task-form').addEventListener('submit',addTask);
-    searchBox.addEventListener('input',e=>{currentFilter=e.target.value;renderTaskList();});
-    document.getElementById('sort-urgency').onclick=()=>{setSort('urgency');};
-    document.getElementById('sort-status').onclick=()=>{setSort('status');};
-    document.getElementById('clear-filter').onclick=()=>{searchBox.value=currentFilter='';currentSort={key:'createdAt',reverse:false};renderTaskList();};
-    statsStartDateInput.onchange=updateStats;statsEndDateInput.onchange=updateStats;
-    document.querySelectorAll('.tab-btn').forEach(btn=>btn.onclick=e=>switchTab(e.target.dataset.tab));
-    taskListBody.onclick=e=>handleRowClick(e);
-    document.getElementById('generate-report-btn').onclick=generateWeeklyReport;
-    document.getElementById('save-report-btn').onclick=saveWeeklyReport;
-    document.getElementById('backup-data').onclick=backupData;
-    setupBatchModal();setupEditModal();
-  }
-
-  // 渲染
-  function render(){renderTaskList();updateStats();updateUrgentTasks();populateWeekSelector();loadSelectedWeekData();}
-  function renderTaskList(){/* 同前 */}
-  function updateStats(){/* 同前 */}
-  function updateUrgentTasks(){/* 同前 */}
-  function populateWeekSelector(){/* 同前 */}
-  function loadSelectedWeekData(){/* 同前 */}
-  function generateWeeklyReport(){/* 同前 */}
-  function saveWeeklyReport(){/* 同前 */}
-  function backupData(){/* 同前 */}
-  function addTask(e){e.preventDefault();/* Supabase 插入 */ render();}
-  function switchTab(tab){/* 切换选项卡 */}
-  function handleRowClick(e){/* 编辑删除 */}
-  function setupBatchModal(){/* 初始化批量模态 */}
-  function setupEditModal(){/* 初始化编辑模态 */}
-  function getWeekIdFromDate(d){/* 同前 */}
-
+const SUPABASE_URL='https://oprqecajnzvzusjqqolk.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wcnFlY2Fqbnp2enVzanFxb2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMTQzMzMsImV4cCI6MjA2OTU5MDMzM30.lY691Yw7u6ipUxXW6inYAnkv-ohJT96OWTAU-usMJOw';
+const supabase=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const URGENCY_LEVELS={"非常重要紧急":4,"重要不紧急":3,"紧急不重要":2,"不重要不紧急":1};
+const STATUS_OPTIONS=["待办","进行中","已暂停","已完成"];
+const URGENT_DAYS=2;
+let tasks=[],weeklyProgress={},currentSort={key:'created_at',reverse:false},currentFilter='';
+// DOM
+const loginEl=document.getElementById('login'),appEl=document.getElementById('app'),msgEl=document.getElementById('login-msg');
+const taskListBody=document.getElementById('task-list-body'),searchBox=document.getElementById('search-box');
+const statsStart=document.getElementById('stats-start-date'),statsEnd=document.getElementById('stats-end-date');
+// auth
+async function sessionChange(){let{data:{session}}=await supabase.auth.getSession(); if(session) showApp(); else showLogin();}
+supabase.auth.onAuthStateChange(sessionChange);
+async function showLogin(){loginEl.classList.remove('hidden');appEl.classList.add('hidden');}
+async function showApp(){loginEl.classList.add('hidden');appEl.classList.remove('hidden'); await initialize();}
+// events
+document.getElementById('btn-signup').onclick=async()=>{let e=document.getElementById('email').value,p=document.getElementById('password').value;let{error}=await supabase.auth.signUp({email:e,password:p});msgEl.textContent=error?error.message:'注册成功';};
+document.getElementById('btn-login').onclick=async()=>{let e=document.getElementById('email').value,p=document.getElementById('password').value;let{error}=await supabase.auth.signInWithPassword({email:e,password:p});msgEl.textContent=error?error.message:'';};
+document.getElementById('btn-github').onclick=()=>supabase.auth.signInWithOAuth({provider:'github'});
+document.getElementById('btn-logout').onclick=async()=>{await supabase.auth.signOut();};
+// init\async function initialize(){await loadData();setupListeners();render();}
+async function loadData(){let{data:{user}}=await supabase.auth.getUser(); let{data:t}=await supabase.from('tasks').select('*').eq('user_id',user.id); tasks=t||[]; let{data:wp}=await supabase.from('weekly_progress').select('*').eq('user_id',user.id); weeklyProgress=wp.reduce((a,r)=>{a[r.week_id]=r;return a;},{});}
+function setupListeners(){document.getElementById('add-task-form').addEventListener('submit',addTask);searchBox.addEventListener('input',e=>{currentFilter=e.target.value;renderTaskList();});document.getElementById('sort-urgency').onclick=()=>{setSort('urgency')};document.getElementById('sort-status').onclick=()=>{setSort('status')};document.getElementById('clear-filter').onclick=()=>{searchBox.value=currentFilter='';currentSort={key:'created_at',reverse:false};renderTaskList();};statsStart.onchange=render;statsEnd.onchange=render;document.querySelectorAll('.tab-btn').forEach(b=>b.onclick=e=>switchTab(e.target.dataset.tab));taskListBody.onclick=e=>handleRow(e);document.getElementById('generate-report-btn').onclick=generateWeeklyReport;document.getElementById('save-report-btn').onclick=saveWeeklyReport;document.getElementById('backup-data').onclick=backupData;setupBatch();setupEdit();}
+function render(){renderTaskList();updateStats();updateUrgent();populateWeeks();loadWeek();}
+function renderTaskList(){taskListBody.innerHTML=''; let arr=tasks.filter(t=>Object.values(t).join('').includes(currentFilter)); arr.sort((a,b)=>{let va=currentSort.key==='urgency'?URGENCY_LEVELS[a.urgency]:a.created_at;let vb=currentSort.key==='urgency'?URGENCY_LEVELS[b.urgency]:b.created_at;return currentSort.reverse?vb-va:va-vb});arr.forEach((t,i)=>{let row=document.createElement('tr');row.innerHTML=`<td>${i+1}</td><td>${t.name}</td><td>${t.start_date}→${t.end_date}</td><td>${t.urgency}</td><td>${t.status}</td><td><button data-id="${t.id}" data-act="edit">✏</button><button data-id="${t.id}" data-act="del">🗑</button></td>`;taskListBody.append(row);});}
+function updateStats(){let s=statsStart.value,e=statsEnd.value;let f=tasks; if(s&&e)f=tasks.filter(t=>t.start_date<=e&&t.end_date>=s);document.getElementById('stat-total').textContent=f.length;document.getElementById('stat-completed').textContent=f.filter(t=>t.status==='已完成').length;document.getElementById('stat-pending').textContent=f.filter(t=>t.status!=='已完成').length;}
+function updateUrgent(){let ul=document.getElementById('urgent-tasks-list');ul.innerHTML='';let now=new Date(),lim=new Date(now.setDate(now.getDate()+URGENT_DAYS));tasks.filter(t=>t.status!=='已完成'&&new Date(t.end_date)<=lim).forEach(t=>{let li=document.createElement('li');li.textContent=`${t.name} (${t.end_date})`;ul.append(li);});}
+function setSort(key){currentSort.key=key;renderTaskList();}
+function switchTab(tab){document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelector(`[data-tab="${tab}"]`).classList.add('active');document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));document.getElementById('tab-'+tab).classList.remove('hidden');}
+async function addTask(e){e.preventDefault();let n=document.getElementById('task-name').value,sd=document.getElementById('task-start').value,ed=document.getElementById('task-end').value,urg=document.getElementById('task-urgency').value;let{data:{user}}=await supabase.auth.getUser();await supabase.from('tasks').insert({user_id:user.id,name:n,start_date:sd,end_date:ed,urgency:urg,status:'待办'});await loadData();render();}
+function handleRow(e){let id=e.target.dataset.id,act=e.target.dataset.act; if(act==='del'){supabase.from('tasks').delete().eq('id',id).then(()=>{loadData().then(render)});} if(act==='edit'){openEdit(id);} }
+function populateWeeks(){let sel=document.getElementById('week-selector');sel.innerHTML='';let weeks=new Set(tasks.map(t=>getWeek(t.start_date)).concat(Object.keys(weeklyProgress)));weeks.forEach(w=>sel.add(new Option(w,w)));}
+async function generateWeeklyReport(){let w=document.getElementById('week-selector').value;let items=tasks.filter(t=>getWeek(t.start_date)===w||getWeek(t.end_date)===w);let txt=`周报 ${w}\n`;items.forEach(t=>txt+=`- ${t.name}(${t.status})\n`);document.getElementById('generated-report-area').value=txt;}
+async function saveWeeklyReport(){let w=document.getElementById('week-selector').value,txt=document.getElementById('generated-report-area').value;let{data:{user}}=await supabase.auth.getUser();await supabase.from('weekly_progress').upsert({user_id:user.id,week_id:w,generated_report:txt},{onConflict:['user_id','week_id']});alert('已保存');}
+function backupData(){let url=URL.createObjectURL(new Blob([JSON.stringify({tasks,weeklyProgress})]));let a=document.createElement('a');a.href=url;a.download='backup.json';a.click();}
+function getWeek(d){let dt=new Date(d);let y=dt.getFullYear();let one=new Date(y,0,1);let day=(dt - one)/(86400000);let w=Math.ceil((day+one.getDay()+1)/7);return `${y}-W${String(w).padStart(2,'0')}`;}
+// TODO: 实现批量和编辑模态逻辑
 </script>
 </body>
 </html>
