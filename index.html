@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TaskMaster Cloud</title>
-    <!-- 引入 Supabase JS 客户端库 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- **FIX #1**: 添加 defer 属性，确保脚本在 HTML 解析后执行 -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         /* 全新配色方案 */
         :root {
@@ -41,7 +41,7 @@
         .auth-form button { width: 100%; }
         #auth-toggle { margin-top: 1.5rem; background: none; border: none; color: var(--color-primary); cursor: pointer; font-size: 0.9rem; }
         #auth-message { margin-top: 1rem; color: var(--color-danger); font-size: 0.9rem; min-height: 1.2rem; }
-        #app-loading { text-align: center; font-size: 1.5rem; color: var(--color-primary); }
+        #app-loading { text-align: center; font-size: 1.5rem; color: var(--color-primary); padding: 2rem; }
 
         /* 主应用容器默认隐藏 */
         .app-container {
@@ -131,7 +131,7 @@
         <button id="auth-toggle">还没有账户？点此注册</button>
     </div>
 
-    <!-- 主应用容器 -->
+    <!-- 主应用容器 (内容与之前一致) -->
     <div class="app-container">
         <!-- 侧边栏 -->
         <aside class="sidebar">
@@ -190,39 +190,27 @@
         </main>
     </div>
     
-    <!-- 模态框 HTML -->
-    <div id="batch-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header"><h2>批量添加任务</h2><button class="modal-close" data-target="batch-modal">×</button></div>
-            <div class="modal-body">
-                <div id="batch-tasks-container"><div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center;"><input type="text" class="batch-name" placeholder="任务名称"><input type="date" class="batch-start-date"><input type="date" class="batch-end-date"><select class="batch-urgency"></select></div></div>
-                <button id="add-batch-row" class="btn" style="margin-top: 10px;">+ 添加另一行</button>
-            </div>
-            <div class="modal-footer"> <button class="btn modal-close" data-target="batch-modal">取消</button> <button id="save-batch-btn" class="btn-primary">保存任务</button> </div>
-        </div>
-    </div>
-    <div id="edit-modal" class="modal">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header"><h2>编辑任务</h2><button class="modal-close" data-target="edit-modal">×</button></div>
-            <div class="modal-body">
-                <input type="hidden" id="edit-task-id">
-                <div style="border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; margin-bottom: 1rem;"> <h4>录入今日进展</h4> <div style="display: flex; gap: 10px; margin-top: 5px;"><input type="text" id="new-progress-content" placeholder="输入进展内容..." style="flex-grow: 1;"><button id="add-progress-btn" class="btn">添加</button></div> </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"> <div><label>任务名称</label><input type="text" id="edit-task-name"></div> <div><label>重要程度</label><select id="edit-task-urgency"></select></div> <div><label>开始日期</label><input type="date" id="edit-task-start-date"></div> <div><label>结束日期</label><input type="date" id="edit-task-end-date"></div> </div>
-                <div style="margin-top: 15px;"><label>任务状态</label><select id="edit-task-status"></select></div> <div style="margin-top: 15px;"><label>备注</label><textarea id="edit-task-notes" rows="3"></textarea></div>
-                <div style="margin-top: 15px;"> <h4>历史进展记录</h4> <div id="edit-daily-progress-container"></div> </div>
-            </div>
-            <div class="modal-footer"> <button class="btn modal-close" data-target="edit-modal">取消</button> <button id="save-edit-btn" class="btn-primary">保存更改</button> </div>
-        </div>
-    </div>
+    <!-- 模态框 HTML (内容与之前一致) -->
+    <div id="batch-modal" class="modal"> <div class="modal-content"> <div class="modal-header"><h2>批量添加任务</h2><button class="modal-close" data-target="batch-modal">×</button></div> <div class="modal-body"> <div id="batch-tasks-container"><div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; align-items: center;"><input type="text" class="batch-name" placeholder="任务名称"><input type="date" class="batch-start-date"><input type="date" class="batch-end-date"><select class="batch-urgency"></select></div></div> <button id="add-batch-row" class="btn" style="margin-top: 10px;">+ 添加另一行</button> </div> <div class="modal-footer"> <button class="btn modal-close" data-target="batch-modal">取消</button> <button id="save-batch-btn" class="btn-primary">保存任务</button> </div> </div> </div>
+    <div id="edit-modal" class="modal"> <div class="modal-content" style="max-width: 600px;"> <div class="modal-header"><h2>编辑任务</h2><button class="modal-close" data-target="edit-modal">×</button></div> <div class="modal-body"> <input type="hidden" id="edit-task-id"> <div style="border-bottom: 1px solid var(--color-border); padding-bottom: 1rem; margin-bottom: 1rem;"> <h4>录入今日进展</h4> <div style="display: flex; gap: 10px; margin-top: 5px;"><input type="text" id="new-progress-content" placeholder="输入进展内容..." style="flex-grow: 1;"><button id="add-progress-btn" class="btn">添加</button></div> </div> <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;"> <div><label>任务名称</label><input type="text" id="edit-task-name"></div> <div><label>重要程度</label><select id="edit-task-urgency"></select></div> <div><label>开始日期</label><input type="date" id="edit-task-start-date"></div> <div><label>结束日期</label><input type="date" id="edit-task-end-date"></div> </div> <div style="margin-top: 15px;"><label>任务状态</label><select id="edit-task-status"></select></div> <div style="margin-top: 15px;"><label>备注</label><textarea id="edit-task-notes" rows="3"></textarea></div> <div style="margin-top: 15px;"> <h4>历史进展记录</h4> <div id="edit-daily-progress-container"></div> </div> </div> <div class="modal-footer"> <button class="btn modal-close" data-target="edit-modal">取消</button> <button id="save-edit-btn" class="btn-primary">保存更改</button> </div> </div> </div>
 
 <script>
+// 使用 DOMContentLoaded 确保 HTML 结构加载完毕
 document.addEventListener('DOMContentLoaded', () => {
     
+    // --- **FIX #2**: 增加安全检查，如果 Supabase 库加载失败则提示 ---
+    if (!window.supabase) {
+        const appLoadingDiv = document.getElementById('app-loading');
+        appLoadingDiv.textContent = '核心组件加载失败，请检查您的网络连接并刷新页面。';
+        appLoadingDiv.style.color = 'red';
+        return; // 终止后续所有脚本执行
+    }
+
     // --- Supabase 配置 ---
     const SUPABASE_URL = 'https://oprqecajnzvzusjqqolk.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9wcnFlY2Fqbnp2enVzanFxb2xrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQwMTQzMzMsImV4cCI6MjA2OTU5MDMzM30.lY691Yw7u6ipUxXW6inYAnkv-ohJT96OWTAU-usMJOw';
     
-    // --- **FINAL FIX**: 显式地从 window 对象获取 supabase 库 ---
+    // 从已确认存在的 window.supabase 中解构
     const { createClient } = window.supabase;
     const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -328,8 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const urgentTasks = tasks.filter(t => t.status !== '已完成' && t.end_date && new Date(t.end_date) >= today && new Date(t.end_date) <= reminderDeadline).sort((a,b) => new Date(a.end_date) - new Date(b.end_date));
         if (urgentTasks.length === 0) { list.innerHTML = `<li style="color: var(--color-text-secondary); font-style: italic; border: none;">无紧急任务</li>`; } else { const fragment = document.createDocumentFragment(); urgentTasks.forEach(task => { const li = document.createElement('li'); li.className = `urgency-${URGENCY_LEVELS[task.urgency]?.value || 1}`; li.innerHTML = `${escapeHtml(task.name)}<small>到期: ${task.end_date}</small>`; fragment.appendChild(li); }); list.appendChild(fragment); }
     }
-
-    // --- 事件监听设置 ---
+    // ... [其他渲染/辅助函数] ...
     function setupEventListeners() {
         document.getElementById('add-task-form').addEventListener('submit', addTask);
         searchBox.addEventListener('input', (e) => { currentFilter = e.target.value; renderTaskList(); });
@@ -351,8 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function setupBatchModalListeners() { const batchModal = document.getElementById('batch-modal'); document.getElementById('batch-op-btn').addEventListener('click', () => openModal('batch-modal')); batchModal.querySelector('#save-batch-btn').addEventListener('click', saveManualBatch); batchModal.querySelector('#add-batch-row').addEventListener('click', () => { const container = batchModal.querySelector('#batch-tasks-container'); const newRow = container.firstElementChild.cloneNode(true); newRow.querySelectorAll('input').forEach(i => i.value = ''); populateSelect(newRow.querySelector('.batch-urgency'), Object.keys(URGENCY_LEVELS)); container.appendChild(newRow); }); populateSelect(batchModal.querySelector('.batch-urgency'), Object.keys(URGENCY_LEVELS)); }
     function setupEditModalListeners(){ const editModal = document.getElementById('edit-modal'); editModal.querySelector('#save-edit-btn').addEventListener('click', saveEditTask); editModal.querySelector('#add-progress-btn').addEventListener('click', addDailyProgress); editModal.querySelector('#edit-daily-progress-container').addEventListener('click', e => { const deleteBtn = e.target.closest('.delete-progress-btn'); if (deleteBtn) { const { date, index } = deleteBtn.dataset; deleteDailyProgress(document.getElementById('edit-task-id').value, date, parseInt(index)); } }); }
-
-    // --- 数据操作函数 (使用 supabaseClient) ---
     async function addTask(e) {
         e.preventDefault();
         const form = e.target;
@@ -404,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveEditTask() { const id = document.getElementById('edit-task-id').value; const updates = { name:document.getElementById('edit-task-name').value, start_date:document.getElementById('edit-task-start-date').value, end_date:document.getElementById('edit-task-end-date').value, urgency:document.getElementById('edit-task-urgency').value, status:document.getElementById('edit-task-status').value, notes:document.getElementById('edit-task-notes').value }; await updateTask(id, updates); closeModal('edit-modal'); }
     async function addDailyProgress() { const id = document.getElementById('edit-task-id').value; const task = tasks.find(t => t.id === id); const contentInput = document.getElementById('new-progress-content'); const content = contentInput.value.trim(); if (!task || !content) return; const todayStr = new Date().toISOString().split('T')[0]; if (!task.daily_progress[todayStr]) task.daily_progress[todayStr] = []; task.daily_progress[todayStr].push({ content, timestamp: new Date().toISOString() }); await updateTask(id, { daily_progress: task.daily_progress }); contentInput.value = ''; renderDailyProgressEditor(task); }
     async function deleteDailyProgress(taskId, date, index) { const task = tasks.find(t => t.id === taskId); if (task && task.daily_progress[date]) { task.daily_progress[date].splice(index, 1); if (task.daily_progress[date].length === 0) delete task.daily_progress[date]; await updateTask(taskId, { daily_progress: task.daily_progress }); renderDailyProgressEditor(task); } }
-
+    
     // --- 认证表单事件 ---
     document.getElementById('auth-toggle').addEventListener('click', () => {
         const loginForm = document.getElementById('login-form'); const signupForm = document.getElementById('signup-form'); const toggleButton = document.getElementById('auth-toggle');
